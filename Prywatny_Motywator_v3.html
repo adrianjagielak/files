@@ -420,12 +420,13 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                                 Authorization: `Bearer ${apiKey}`,
                             },
                             body: JSON.stringify({
-                                model: "gpt-5",
+                                model: "gpt-4",
                                 messages: [
                                     { role: "system", content: systemPrompt },
                                     { role: "user", content: userPrompt },
                                 ],
-                                max_completion_tokens: 500,
+                                temperature: 0.8,
+                                completion_tokens: 500,
                             }),
                         },
                     );
