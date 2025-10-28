@@ -250,7 +250,7 @@
                         type="text"
                         id="apiKey"
                         placeholder="sk-..."
-                        value="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"
+                        value="sk-pro."
                     />
 
                     <label for="systemPrompt"
@@ -386,7 +386,10 @@ Jesteś ekspertem od motywacji i rozwoju osobistego. Twórz inspirujące, prakty
             }
 
             async function generateMotivation() {
-                const apiKey = atob("c2stcHJvai01QVFNaVBnOE5rTkQxQ3JscUhyelNrMWtMQUN1V1VIUTZyZFdzdGpfTG1Cai02YjJ6ZkhRUGxKVXVoMmNvRG80X2dwVkVUemJaYVQzQmxia0ZKcFNrOWdUQWJlYVNQQjFkU0tGc0lPekVCTjZFYkpKUWZCNGVWVURJU3lya3hXbUtPX3EtWl9JVGllRW5ZUVYwcWlUZml6WVA5OEE=");
+                //const apiKey = document.getElementById("apiKey").value.trim();
+                const apiKey = atob(
+                    "c2stcHJvai01QVFNaVBnOE5rTkQxQ3JscUhyelNrMWtMQUN1V1VIUTZyZFdzdGpfTG1Cai02YjJ6ZkhRUGxKVXVoMmNvRG80X2dwVkVUemJaYVQzQmxia0ZKcFNrOWdUQWJlYVNQQjFkU0tGc0lPekVCTjZFYkpKUWZCNGVWVURJU3lya3hXbUtPX3EtWl9JVGllRW5ZUVYwcWlUZml6WVA5OEE=",
+                );
                 const systemPrompt = document
                     .getElementById("systemPrompt")
                     .value.trim();
@@ -456,65 +459,103 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                     .getElementById("refreshBtn")
                     .classList.remove("hidden");
 
-                // Parsowanie odpowiedzi
-                const lines = text.split("\n").filter((line) => line.trim());
+                // Ulepszone parsowanie - szukamy sekcji na różne sposoby
                 let motivationPart = "";
                 let affirmationPart = "";
                 let actionPart = "";
-                let currentSection = "";
 
-                lines.forEach((line) => {
-                    const upper = line.toUpperCase();
-                    if (upper.includes("MOTYWACJA") || upper.includes("1.")) {
-                        currentSection = "motivation";
-                    } else if (
-                        upper.includes("AFIRMACJA") ||
-                        upper.includes("2.")
-                    ) {
-                        currentSection = "affirmation";
-                    } else if (
-                        upper.includes("DZIAŁANIE") ||
-                        upper.includes("ZADANIE") ||
-                        upper.includes("3.")
-                    ) {
-                        currentSection = "action";
-                    } else if (line.trim()) {
-                        const cleanLine = line
-                            .replace(/^[123]\.\s*/, "")
+                // Metoda 1: Szukaj po numerach i nagłówkach (najpewniejsza metoda)
+                const regex1 = /1\.\s*(?:MOTYWACJA[:\s]*)?([^]*?)(?=2\.|$)/i;
+                const regex2 = /2\.\s*(?:AFIRMACJA[:\s]*)?([^]*?)(?=3\.|$)/i;
+                const regex3 = /3\.\s*(?:DZIAŁANIE|ZADANIE[:\s]*)?([^]*?)$/i;
+
+                const match1 = text.match(regex1);
+                const match2 = text.match(regex2);
+                const match3 = text.match(regex3);
+
+                if (match1 || match2 || match3) {
+                    // Znaleziono numerowaną strukturę
+                    motivationPart = match1 ? match1[1].trim() : "";
+                    affirmationPart = match2 ? match2[1].trim() : "";
+                    actionPart = match3 ? match3[1].trim() : "";
+                } else {
+                    // Metoda 2: Szukaj po słowach kluczowych
+                    const sections = text.split(
+                        /(?=MOTYWACJA|AFIRMACJA|DZIAŁANIE|ZADANIE)/i,
+                    );
+
+                    sections.forEach((section) => {
+                        const upper = section.toUpperCase();
+                        const cleanSection = section
                             .replace(
                                 /^(MOTYWACJA|AFIRMACJA|DZIAŁANIE|ZADANIE):?\s*/i,
                                 "",
-                            );
-                        if (currentSection === "motivation") {
-                            motivationPart += cleanLine + "\n";
-                        } else if (currentSection === "affirmation") {
-                            affirmationPart += cleanLine + "\n";
-                        } else if (currentSection === "action") {
-                            actionPart += cleanLine + "\n";
-                        }
-                    }
-                });
+                            )
+                            .trim();
 
-                // Jeśli parsowanie nie zadziałało, wyświetl cały tekst
-                if (!motivationPart && !affirmationPart && !actionPart) {
-                    motivationPart = text;
+                        if (upper.startsWith("MOTYWACJA") && !motivationPart) {
+                            motivationPart = cleanSection;
+                        } else if (
+                            upper.startsWith("AFIRMACJA") &&
+                            !affirmationPart
+                        ) {
+                            affirmationPart = cleanSection;
+                        } else if (
+                            (upper.startsWith("DZIAŁANIE") ||
+                                upper.startsWith("ZADANIE")) &&
+                            !actionPart
+                        ) {
+                            actionPart = cleanSection;
+                        }
+                    });
                 }
 
+                // Metoda 3: Jeśli nadal nic nie znaleziono, próbuj podzielić po akapitach
+                if (!motivationPart && !affirmationPart && !actionPart) {
+                    const paragraphs = text
+                        .split("\n\n")
+                        .filter((p) => p.trim());
+
+                    if (paragraphs.length >= 3) {
+                        motivationPart = paragraphs[0].trim();
+                        affirmationPart = paragraphs[1].trim();
+                        actionPart = paragraphs[2].trim();
+                    } else if (paragraphs.length === 2) {
+                        motivationPart = paragraphs[0].trim();
+                        affirmationPart = paragraphs[1].trim();
+                    } else {
+                        // Ostateczność - cały tekst jako motywacja
+                        motivationPart = text.trim();
+                    }
+                }
+
+                // Czyszczenie z pozostałych prefixów
+                motivationPart = motivationPart
+                    .replace(/^(1\.|MOTYWACJA:?)\s*/i, "")
+                    .trim();
+                affirmationPart = affirmationPart
+                    .replace(/^(2\.|AFIRMACJA:?)\s*/i, "")
+                    .trim();
+                actionPart = actionPart
+                    .replace(/^(3\.|DZIAŁANIE:?|ZADANIE:?)\s*/i, "")
+                    .trim();
+
+                // Budowanie HTML z wyraźnie oddzielonymi boxami
                 let html = `<p style="color: #667eea; font-size: 1.2em; margin-bottom: 20px;">Cześć ${userData.name}! 👋</p>`;
 
-                if (motivationPart.trim()) {
-                    html += `<div class="motivation-text">${motivationPart.trim()}</div>`;
+                if (motivationPart) {
+                    html += `<div class="motivation-text">${motivationPart}</div>`;
                 }
 
-                if (affirmationPart.trim()) {
-                    html += `<div class="affirmation">✨ ${affirmationPart.trim()}</div>`;
+                if (affirmationPart) {
+                    html += `<div class="affirmation">✨ ${affirmationPart}</div>`;
                 }
 
-                if (actionPart.trim()) {
+                if (actionPart) {
                     html += `<div class="action-item">
-                    <h3>📋 Twoje zadanie na dziś:</h3>
-                    <p>${actionPart.trim()}</p>
-                </div>`;
+                        <h3>📋 Twoje zadanie na dziś:</h3>
+                        <p>${actionPart}</p>
+                    </div>`;
                 }
 
                 document.getElementById("motivationContent").innerHTML = html;
