@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychologia Sportu // CYBERPUNK 2025</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #0a0a0a;
+            color: #00ffff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Cyberpunk grid background */
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(255, 0, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        /* Glitch effect */
+        .glitch {
+            position: relative;
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 2px); }
+            94% { transform: translate(2px, -2px); }
+            96% { transform: translate(-2px, -2px); }
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 2;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+            margin-bottom: 30px;
+            letter-spacing: 5px;
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #ff00ff;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.4);
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #00ffff;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        p, li {
+            font-size: 1.5rem;
+            line-height: 2;
+            color: #b0e0e6;
+            text-shadow: 0 0 5px rgba(176, 224, 230, 0.5);
+            max-width: 1200px;
+        }
+
+        .cyber-box {
+            border: 3px solid #ff00ff;
+            padding: 40px;
+            margin: 20px;
+            background: rgba(255, 0, 255, 0.05);
+            box-shadow: 
+                0 0 20px rgba(255, 0, 255, 0.3),
+                inset 0 0 20px rgba(255, 0, 255, 0.1);
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .cyber-box::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 20px;
+            width: 60px;
+            height: 3px;
+            background: #0a0a0a;
+        }
+
+        .cyber-list {
+            list-style: none;
+            text-align: left;
+            max-width: 1000px;
+        }
+
+        .cyber-list li {
+            padding: 15px 0;
+            border-left: 4px solid #00ffff;
+            padding-left: 20px;
+            margin: 15px 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .cyber-list li:hover {
+            border-left-color: #ff00ff;
+            transform: translateX(10px);
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+        }
+
+        .cyber-list li::before {
+            content: '▸';
+            position: absolute;
+            left: -15px;
+            color: #ff00ff;
+            font-size: 2rem;
+        }
+
+        .neon-text {
+            color: #ff00ff;
+            text-shadow: 
+                0 0 10px rgba(255, 0, 255, 0.8),
+                0 0 20px rgba(255, 0, 255, 0.6),
+                0 0 30px rgba(255, 0, 255, 0.4);
+            font-weight: 700;
+        }
+
+        .cyan-text {
+            color: #00ffff;
+            text-shadow: 
+                0 0 10px rgba(0, 255, 255, 0.8),
+                0 0 20px rgba(0, 255, 255, 0.6);
+            font-weight: 700;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 0, 255, 0.2);
+            border: 2px solid #ff00ff;
+            color: #00ffff;
+            padding: 15px 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+            transform: scale(1.05);
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: #00ffff;
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+
+        /* Scanline effect */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                transparent 50%,
+                rgba(0, 255, 255, 0.05) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 99;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* Pulsing elements */
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Stats box */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .stat-box {
+            border: 2px solid #00ffff;
+            padding: 30px;
+            text-align: center;
+            background: rgba(0, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            border-color: #ff00ff;
+            background: rgba(255, 0, 255, 0.05);
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            color: #ff00ff;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+        }
+
+        .stat-label {
+            font-size: 1.3rem;
+            color: #00ffff;
+            margin-top: 10px;
+        }
+
+        /* Tech lines */
+        .tech-line {
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            margin: 30px auto;
+            position: relative;
+        }
+
+        .tech-line::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: -4px;
+            width: 10px;
+            height: 10px;
+            background: #ff00ff;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #ff00ff;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Quote styling */
+        .cyber-quote {
+            font-size: 2rem;
+            font-style: italic;
+            color: #ff00ff;
+            text-align: center;
+            max-width: 900px;
+            padding: 40px;
+            border-left: 5px solid #00ffff;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .cyber-quote::before {
+            content: '"';
+            font-size: 6rem;
+            position: absolute;
+            left: 10px;
+            top: -20px;
+            color: #00ffff;
+            opacity: 0.3;
+        }
+
+        /* Hologram effect */
+        .holo {
+            position: relative;
+        }
+
+        .holo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                transparent 0%,
+                rgba(0, 255, 255, 0.1) 50%,
+                transparent 100%
+            );
+            animation: holoScan 3s linear infinite;
+        }
+
+        @keyframes holoScan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .column {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="cyber-grid"></div>
+    <div class="scanline"></div>
+    <div class="slide-counter"><span id="current">1</span> / 15</div>
+
+    <!-- Slide 1: Title -->
+    <div class="slide active">
+        <h1 class="glitch">PSYCHOLOGIA SPORTU</h1>
+        <div class="tech-line"></div>
+        <h3 class="pulse">/// SYSTEM UMYSŁU 2.0 ///</h3>
+        <p style="font-size: 1.8rem; margin-top: 30px;">INTERFEJS MIĘDZY MÓZGIEM A CIAŁEM</p>
+        <p style="font-size: 1.3rem; margin-top: 20px; color: #ff00ff;">[ UPGRADE YOUR MENTAL PERFORMANCE ]</p>
+    </div>
+
+    <!-- Slide 2: Intro -->
+    <div class="slide">
+        <h2>CO TO JEST?</h2>
+        <div class="cyber-box holo">
+            <p style="font-size: 2rem; text-align: center;">
+                Psychologia sportu to nauka o <span class="neon-text">mentalnych aspektach</span> 
+                wydajności fizycznej – gdzie <span class="cyan-text">umysł spotyka mięśnie</span>, 
+                gdzie <span class="neon-text">neurotransmitery</span> stają się przewagą konkurencyjną.
+            </p>
+        </div>
+        <div class="tech-line"></div>
+        <p style="margin-top: 30px; font-size: 1.4rem;">
+            To interface łączący biopsychologię, neuronaukę i biomechanikę w jeden system.
+        </p>
+    </div>
+
+    <!-- Slide 3: Historia -->
+    <div class="slide">
+        <h2>EWOLUCJA SYSTEMU</h2>
+        <ul class="cyber-list">
+            <li><span class="cyan-text">1920s:</span> Pierwsze eksperymenty – Coleman Griffith (ojciec psychologii sportu)</li>
+            <li><span class="cyan-text">1960s:</span> Powstanie pierwszych laboratoriów psychologii sportu</li>
+            <li><span class="cyan-text">1980s:</span> Integracja z treningiem olimpijskim</li>
+            <li><span class="cyan-text">2000s:</span> Neuroimaging – skanowanie mózgów atletów</li>
+            <li><span class="cyan-text">2020s:</span> AI, biofeedback, brain-computer interfaces</li>
+        </ul>
+    </div>
+
+    <!-- Slide 4: Key Areas -->
+    <div class="slide">
+        <h2>GŁÓWNE MODUŁY SYSTEMU</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number">01</div>
+                <div class="stat-label">MOTYWACJA</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">02</div>
+                <div class="stat-label">KONCENTRACJA</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">03</div>
+                <div class="stat-label">STRES & LĘK</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">04</div>
+                <div class="stat-label">FLOW STATE</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Motivation -->
+    <div class="slide">
+        <h2>MOTYWACJA // DRIVE.EXE</h2>
+        <div class="two-column">
+            <div class="column">
+                <h3>WEWNĘTRZNA</h3>
+                <ul class="cyber-list">
+                    <li>Pasja, przyjemność</li>
+                    <li>Samodoskonalenie</li>
+                    <li>Autonomia</li>
+                </ul>
+            </div>
+            <div class="column">
+                <h3>ZEWNĘTRZNA</h3>
+                <ul class="cyber-list">
+                    <li>Nagrody, trofea</li>
+                    <li>Uznanie społeczne</li>
+                    <li>Unikanie kary</li>
+                </ul>
+            </div>
+        </div>
+        <div class="tech-line"></div>
+        <p style="text-align: center; margin-top: 20px;">
+            <span class="neon-text">Teoria Autodeterminacji</span>: Kompetencja × Autonomia × Relacje = Peak Performance
+        </p>
+    </div>
+
+    <!-- Slide 6: Flow State -->
+    <div class="slide">
+        <h2>STAN FLOW // MATRIX MODE</h2>
+        <div class="cyber-box">
+            <h3 style="text-align: center;">Mihaly Csikszentmihalyi</h3>
+            <div class="tech-line"></div>
+            <ul class="cyber-list">
+                <li><span class="neon-text">CAŁKOWITE ZAANGAŻOWANIE</span> – jak wejście w sieć</li>
+                <li><span class="cyan-text">UTRATA POCZUCIA CZASU</span> – czas przestaje istnieć</li>
+                <li><span class="neon-text">AUTOMATYZM</span> – działanie bez świadomego myślenia</li>
+                <li><span class="cyan-text">RÓWNOWAGA</span> – perfekcyjny match wyzwania i umiejętności</li>
+            </ul>
+        </div>
+        <p style="margin-top: 30px; font-size: 1.8rem; text-align: center;">
+            <span class="pulse neon-text">→ PEAK PERFORMANCE UNLOCKED ←</span>
+        </p>
+    </div>
+
+    <!-- Slide 7: Stress & Anxiety -->
+    <div class="slide">
+        <h2>STRES // THREAT.SYS</h2>
+        <div class="cyber-quote">
+            Stres nie jest wrogiem – to <span class="cyan-text">sygnał alarmowy</span> 
+            twojego biologicznego systemu operacyjnego.
+        </div>
+        <ul class="cyber-list">
+            <li><span class="neon-text">EUSTRESS:</span> Pozytywny stres – zwiększa wydajność (prawo Yerkesa-Dodsona)</li>
+            <li><span class="cyan-text">DISTRESS:</span> Negatywny stres – przeciążenie systemu</li>
+            <li><span class="neon-text">ZARZĄDZANIE:</span> Oddech, mindfulness, reframing kognitywny</li>
+        </ul>
+    </div>
+
+    <!-- Slide 8: Visualization -->
+    <div class="slide">
+        <h2>WIZUALIZACJA // MIND.RENDER</h2>
+        <div class="cyber-box holo">
+            <p style="font-size: 1.8rem; text-align: center; line-height: 2;">
+                Mózg <span class="neon-text">nie rozróżnia</span> między rzeczywistym 
+                a wyobrażonym ruchem – aktywują się te same <span class="cyan-text">szlaki neuronalne</span>.
+            </p>
+        </div>
+        <div class="tech-line"></div>
+        <div class="two-column" style="margin-top: 40px;">
+            <div class="column">
+                <h3>TECHNIKI:</h3>
+                <ul class="cyber-list">
+                    <li>Mental rehearsal</li>
+                    <li>Imagery scripts</li>
+                    <li>Multisensoryczne sceny</li>
+                </ul>
+            </div>
+            <div class="column">
+                <h3>EFEKTY:</h3>
+                <ul class="cyber-list">
+                    <li>↑ Pamięć mięśniowa</li>
+                    <li>↑ Pewność siebie</li>
+                    <li>↓ Lęk przed występem</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Self-Talk -->
+    <div class="slide">
+        <h2>SAMOROZMOWA // INTERNAL.CHAT</h2>
+        <ul class="cyber-list">
+            <li><span class="cyan-text">POZYTYWNA:</span> "Potrafię to zrobić!" – zwiększa pewność</li>
+            <li><span class="neon-text">INSTRUKTAŻOWA:</span> "Skup się na technice" – precyzja ruchu</li>
+            <li><span class="cyan-text">MOTYWACYJNA:</span> "Daj z siebie wszystko!" – boost energii</li>
+            <li style="color: #ff0000; border-left-color: #ff0000;">
+                <span style="color: #ff0000;">NEGATYWNA:</span> "Nie dam rady..." – SYSTEM ERROR
+            </li>
+        </ul>
+        <div class="tech-line"></div>
+        <p style="text-align: center; margin-top: 30px; font-size: 1.6rem;">
+            <span class="neon-text">REFRAMING</span> = przeprogramowanie wewnętrznego narratora
+        </p>
+    </div>
+
+    <!-- Slide 10: Goal Setting -->
+    <div class="slide">
+        <h2>CELE // TARGET.LOCK</h2>
+        <div class="cyber-box">
+            <h3 style="text-align: center;">SMART FRAMEWORK 2.0</h3>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label"><span class="neon-text">S</span>pecyficzne</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label"><span class="neon-text">M</span>ierzalne</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label"><span class="neon-text">A</span>mbicje</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label"><span class="neon-text">R</span>ealistyczne</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <div class="stat-box" style="display: inline-block;">
+                    <div class="stat-label"><span class="neon-text">T</span>erminowe</div>
+                </div>
+            </div>
+        </div>
+        <div class="tech-line"></div>
+        <p style="text-align: center; margin-top: 20px;">
+            Cele długoterminowe + cele krótkoterminowe = <span class="cyan-text">PROGRESSIVE OVERLOAD</span>
+        </p>
+    </div>
+
+    <!-- Slide 11: Team Dynamics -->
+    <div class="slide">
+        <h2>DYNAMIKA ZESPOŁU // NETWORK.SYNC</h2>
+        <ul class="cyber-list">
+            <li><span class="neon-text">KOHESJA:</span> Więź zespołowa – siła kolektywu</li>
+            <li><span class="cyan-text">KOMUNIKACJA:</span> Protokoły wymiany danych w czasie rzeczywistym</li>
+            <li><span class="neon-text">ROLE:</span> Optymalna alokacja funkcji w systemie</li>
+            <li><span class="cyan-text">PRZYWÓDZTWO:</span> Administrator grupy – kierowanie zasobami</li>
+            <li><span class="neon-text">KONFLIKTY:</span> Debugowanie relacji interpersonalnych</li>
+        </ul>
+        <div class="tech-line"></div>
+        <p style="text-align: center; margin-top: 30px; font-size: 1.6rem;">
+            <span class="pulse">1 + 1 + 1 > 3</span> // efekt synergii
+        </p>
+    </div>
+
+    <!-- Slide 12: Mental Training Techniques -->
+    <div class="slide">
+        <h2>TECHNIKI TRENINGU // UPGRADE.KIT</h2>
+        <div class="two-column">
+            <div class="column">
+                <div class="cyber-box">
+                    <h3>BIOFEEDBACK</h3>
+                    <p>Monitorowanie HR, HRV, GSR w czasie rzeczywistym</p>
+                </div>
+                <div class="cyber-box" style="margin-top: 20px;">
+                    <h3>MINDFULNESS</h3>
+                    <p>Medytacja, świadome oddychanie, tu i teraz</p>
+                </div>
+            </div>
+            <div class="column">
+                <div class="cyber-box">
+                    <h3>NEUROFEEDBACK</h3>
+                    <p>Trening fal mózgowych, optymalizacja stanów alpha/theta</p>
+                </div>
+                <div class="cyber-box" style="margin-top: 20px;">
+                    <h3>PMR</h3>
+                    <p>Progressive Muscle Relaxation – reset napięcia</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 13: Case Studies -->
+    <div class="slide">
+        <h2>CASE STUDIES // PROOF.LOG</h2>
+        <ul class="cyber-list">
+            <li><span class="neon-text">MICHAEL JORDAN:</span> Wizualizacja każdego rzutu przed meczem – mentalny trening jako fundament sukcesu</li>
+            <li><span class="cyan-text">USAIN BOLT:</span> Pre-race routines – rytuały redukujące lęk i zwiększające focus</li>
+            <li><span class="neon-text">SIMONE BILES:</span> Terapia po "twisties" – zarządzanie presją i zdrowiem mentalnym</li>
+            <li><span class="cyan-text">DRUŻYNA ALL BLACKS:</span> Haka jako ritual team bonding – psychologia kultury</li>
+        </ul>
+    </div>
+
+    <!-- Slide 14: Future Tech -->
+    <div class="slide">
+        <h2>PRZYSZŁOŚĆ // NEXT.GEN</h2>
+        <div class="cyber-box holo">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <h3 class="cyan-text">VR TRAINING</h3>
+                    <p>Immersyjne środowiska treningowe</p>
+                </div>
+                <div class="stat-box">
+                    <h3 class="neon-text">AI COACHES</h3>
+                    <p>Algorytmy uczące się twojego umysłu</p>
+                </div>
+                <div class="stat-box">
+                    <h3 class="cyan-text">BRAIN-COMPUTER</h3>
+                    <p>Bezpośredni interfejs mózg-maszyna</p>
+                </div>
+                <div class="stat-box">
+                    <h3 class="neon-text">GENETIC PROFILING</h3>
+                    <p>Spersonalizowane protokoły mentalne</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 15: Outro -->
+    <div class="slide">
+        <h1 class="glitch pulse">GAME OVER?</h1>
+        <div class="tech-line"></div>
+        <h2 style="font-size: 3rem;">NIE. TO DOPIERO <span class="cyan-text">POCZĄTEK</span>.</h2>
+        <div class="cyber-quote">
+            Ciało osiąga to, <span class="neon-text">co umysł wierzy</span>, 
+            że jest możliwe.
+        </div>
+        <p style="font-size: 2rem; margin-top: 40px;">
+            <span class="pulse">/// SYSTEM READY FOR DEPLOYMENT ///</span>
+        </p>
+        <p style="font-size: 1.5rem; margin-top: 30px; color: #ff00ff;">
+            [ MENTAL STRENGTH = UNLIMITED POWER ]
+        </p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <button class="nav-btn" onclick="prevSlide()">◄ PREV</button>
+        <button class="nav-btn" onclick="nextSlide()">NEXT ►</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            document.getElementById('current').textContent = currentSlide + 1;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Add glitch effect randomly
+        setInterval(() => {
+            const glitchElements = document.querySelectorAll('.glitch');
+            glitchElements.forEach(el => {
+                if (Math.random() > 0.7) {
+                    el.style.animation = 'none';
+                    setTimeout(() => {
+                        el.style.animation = 'glitch 3s infinite';
+                    }, 10);
+                }
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
