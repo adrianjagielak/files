@@ -17,8 +17,9 @@
                 min-height: 100vh;
                 display: flex;
                 justify-content: center;
-                align-items: center;
+                align-items: flex-start;
                 padding: 20px;
+                padding-top: 40px;
             }
 
             .container {
@@ -35,42 +36,6 @@
                 text-align: center;
                 margin-bottom: 30px;
                 font-size: 2em;
-            }
-
-            .api-config {
-                background: #f8f9fa;
-                padding: 15px;
-                border-radius: 10px;
-                margin-bottom: 25px;
-                border-left: 4px solid #667eea;
-            }
-
-            .api-config label {
-                display: block;
-                font-weight: 600;
-                margin-bottom: 5px;
-                color: #555;
-                font-size: 0.9em;
-            }
-
-            .api-config input {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                font-family: monospace;
-                font-size: 0.85em;
-                margin-bottom: 10px;
-            }
-
-            .api-config textarea {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                font-size: 0.85em;
-                resize: vertical;
-                min-height: 80px;
             }
 
             .form-group {
@@ -152,6 +117,11 @@
                 line-height: 1.8;
                 color: #333;
                 white-space: pre-wrap;
+                min-height: 60px;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: slideIn 0.5s ease forwards;
+                transition: all 0.15s ease;
             }
 
             .affirmation {
@@ -164,6 +134,11 @@
                 font-weight: 600;
                 margin-bottom: 20px;
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                min-height: 60px;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: slideIn 0.5s ease forwards;
+                transition: all 0.15s ease;
             }
 
             .action-item {
@@ -172,6 +147,18 @@
                 border-radius: 12px;
                 border-left: 5px solid #4caf50;
                 margin-bottom: 20px;
+                min-height: 60px;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: slideIn 0.5s ease forwards;
+                transition: all 0.15s ease;
+            }
+
+            @keyframes slideIn {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
             .action-item h3 {
@@ -225,105 +212,99 @@
             .error {
                 background: #ffebee;
                 color: #c62828;
-                padding: 15px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-                border-left: 4px solid #c62828;
+                padding: 20px;
+                border-radius: 12px;
+                margin-top: 20px;
+                border-left: 5px solid #c62828;
             }
 
-            .info-text {
-                color: #666;
-                font-size: 0.9em;
-                margin-top: 5px;
+            .streaming-cursor {
+                display: inline-block;
+                width: 8px;
+                height: 1em;
+                background: #667eea;
+                animation: blink 1s infinite;
+                margin-left: 2px;
+            }
+
+            @keyframes blink {
+                0%,
+                50% {
+                    opacity: 1;
+                }
+                51%,
+                100% {
+                    opacity: 0;
+                }
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <!-- Screen 1: Formularz -->
+            <h1>💪 Twoja Codzienna Motywacja</h1>
+
             <div id="formScreen">
-                <h1>💪 Twoja Codzienna Motywacja</h1>
-
-                <div class="api-config" style="display: none">
-                    <label for="apiKey">🔑 Klucz API OpenAI (testowy):</label>
-                    <input
-                        type="text"
-                        id="apiKey"
-                        placeholder="sk-..."
-                        value="sk-pro."
-                    />
-
-                    <label for="systemPrompt"
-                        >📝 System Prompt (testowy):</label
-                    >
-                    <textarea id="systemPrompt">
-Jesteś ekspertem od motywacji i rozwoju osobistego. Twórz inspirujące, praktyczne i spersonalizowane treści motywacyjne w języku polskim. Bądź konkretny, empatyczny i dodaj wartość praktyczną. Struktura odpowiedzi:
-
-1. MOTYWACJA (2-3 zdania inspirujące dopasowane do sytuacji użytkownika)
-2. AFIRMACJA (jedna mocna afirmacja w pierwszej osobie)
-3. DZIAŁANIE (jedno konkretne zadanie do wykonania dzisiaj)</textarea
-                    >
+                <div class="form-group">
+                    <label for="name">📝 Jak masz na imię?</label>
+                    <input type="text" id="name" placeholder="Twoje imię..." />
                 </div>
 
-                <form id="motivationForm">
-                    <div class="form-group">
-                        <label for="name">🧑 Jak masz na imię?</label>
-                        <input
-                            type="text"
-                            id="name"
-                            required
-                            placeholder="Twoje imię"
-                        />
-                    </div>
+                <div class="form-group">
+                    <label for="feeling">💭 Jak się dziś czujesz?</label>
+                    <textarea
+                        id="feeling"
+                        placeholder="Opisz swoje obecne samopoczucie..."
+                    ></textarea>
+                </div>
 
-                    <div class="form-group">
-                        <label for="feeling">💭 Jak się dzisiaj czujesz?</label>
-                        <input
-                            type="text"
-                            id="feeling"
-                            required
-                            placeholder="np. zmęczony, podekscytowany, niezdecydowany..."
-                        />
-                    </div>
+                <div class="form-group">
+                    <label for="goals">🎯 Jakie są Twoje cele?</label>
+                    <textarea
+                        id="goals"
+                        placeholder="Co chcesz osiągnąć?..."
+                    ></textarea>
+                </div>
 
-                    <div class="form-group">
-                        <label for="goals">🎯 Jakie są Twoje cele?</label>
-                        <textarea
-                            id="goals"
-                            required
-                            placeholder="Opisz swoje cele, marzenia, to co chcesz osiągnąć..."
-                        ></textarea>
-                        <div class="info-text">
-                            Możesz wymienić cele krótko- i długoterminowe
-                        </div>
-                    </div>
-
-                    <button type="submit">✨ Generuj Moją Motywację</button>
-                </form>
+                <button id="generateBtn">Generuj Motywację 🚀</button>
             </div>
 
-            <!-- Screen 2: Treść motywacyjna -->
             <div id="motivationScreen" class="hidden">
-                <h1>💫 Twoja Motywacja na Dziś</h1>
-
-                <div id="loadingState" class="loading hidden">
+                <div id="loadingState" class="loading">
                     <div class="spinner"></div>
-                    <p>Generuję Twoją spersonalizowaną motywację...</p>
+                    <p>Przygotowuję Twoją motywację...</p>
+                </div>
+
+                <div id="motivationContent" class="motivation-content hidden">
+                    <p
+                        style="
+                            color: #667eea;
+                            font-size: 1.2em;
+                            margin-bottom: 20px;
+                        "
+                        id="greeting"
+                    ></p>
+
+                    <div
+                        class="motivation-text hidden"
+                        id="motivationBox"
+                    ></div>
+
+                    <div class="affirmation hidden" id="affirmationBox">✨</div>
+
+                    <div class="action-item hidden" id="actionBox">
+                        <h3>📋 Twoje zadanie na dziś:</h3>
+                        <p></p>
+                    </div>
                 </div>
 
                 <div id="errorState" class="error hidden"></div>
 
-                <div
-                    id="motivationContent"
-                    class="motivation-content hidden"
-                ></div>
-
                 <div class="button-group">
                     <button id="refreshBtn" class="hidden">
-                        🔄 Wygeneruj Ponownie
+                        🔄 Nowa Motywacja
                     </button>
                     <button id="backBtn" class="btn-secondary">
-                        ← Powrót do Formularza
+                        ⬅️ Powrót
                     </button>
                 </div>
             </div>
@@ -332,25 +313,21 @@ Jesteś ekspertem od motywacji i rozwoju osobistego. Twórz inspirujące, prakty
         <script>
             let userData = {};
 
-            // Domyślny system prompt
-            document.getElementById("systemPrompt").value =
-                `Jesteś ekspertem od motywacji i rozwoju osobistego. Twórz inspirujące, praktyczne i spersonalizowane treści motywacyjne w języku polskim. Bądź konkretny, empatyczny i dodaj wartość praktyczną. Struktura odpowiedzi:
-
-1. MOTYWACJA (2-3 zdania inspirujące dopasowane do sytuacji użytkownika)
-2. AFIRMACJA (jedna mocna afirmacja w pierwszej osobie)
-3. DZIAŁANIE (jedno konkretne zadanie do wykonania dzisiaj)`;
-
             document
-                .getElementById("motivationForm")
-                .addEventListener("submit", async (e) => {
-                    e.preventDefault();
+                .getElementById("generateBtn")
+                .addEventListener("click", async () => {
+                    const name = document.getElementById("name").value.trim();
+                    const feeling = document
+                        .getElementById("feeling")
+                        .value.trim();
+                    const goals = document.getElementById("goals").value.trim();
 
-                    userData = {
-                        name: document.getElementById("name").value,
-                        feeling: document.getElementById("feeling").value,
-                        goals: document.getElementById("goals").value,
-                    };
+                    if (!name || !feeling || !goals) {
+                        alert("Proszę wypełnić wszystkie pola");
+                        return;
+                    }
 
+                    userData = { name, feeling, goals };
                     showMotivationScreen();
                     await generateMotivation();
                 });
@@ -386,19 +363,26 @@ Jesteś ekspertem od motywacji i rozwoju osobistego. Twórz inspirujące, prakty
             }
 
             async function generateMotivation() {
-                //const apiKey = document.getElementById("apiKey").value.trim();
                 const apiKey = atob(
                     "c2stcHJvai01QVFNaVBnOE5rTkQxQ3JscUhyelNrMWtMQUN1V1VIUTZyZFdzdGpfTG1Cai02YjJ6ZkhRUGxKVXVoMmNvRG80X2dwVkVUemJaYVQzQmxia0ZKcFNrOWdUQWJlYVNQQjFkU0tGc0lPekVCTjZFYkpKUWZCNGVWVURJU3lya3hXbUtPX3EtWl9JVGllRW5ZUVYwcWlUZml6WVA5OEE=",
                 );
-                const systemPrompt = document
-                    .getElementById("systemPrompt")
-                    .value.trim();
 
-                if (!apiKey) {
-                    showError("Proszę podać klucz API OpenAI");
-                    return;
-                }
+                const systemPrompt = `Jesteś osobistym coachem motywacyjnym. Użytkownik poda Ci swoje imię, obecne samopoczucie i cele.
 
+Odpowiedz w następującym formacie (używając dokładnie tych nagłówków):
+
+===MOTYWACJA===
+[Krótki, ciepły i inspirujący tekst motywacyjny (2-3 zdania) skierowany bezpośrednio do użytkownika]
+
+===AFIRMACJA===
+[Jedna potężna, pozytywna afirmacja w pierwszej osobie (np. 'Jestem...')]
+
+===DZIAŁANIE===
+[Jedno konkretne, praktyczne działanie na dziś (jasne i wykonalne zadanie)]
+
+Ton: ciepły, empatyczny, ale konkretny. Dopasuj motywację do samopoczucia i celów użytkownika.`;
+
+                // Reset display
                 document
                     .getElementById("loadingState")
                     .classList.remove("hidden");
@@ -406,6 +390,15 @@ Jesteś ekspertem od motywacji i rozwoju osobistego. Twórz inspirujące, prakty
                     .getElementById("motivationContent")
                     .classList.add("hidden");
                 document.getElementById("errorState").classList.add("hidden");
+
+                // Hide all boxes for next generation
+                document
+                    .getElementById("motivationBox")
+                    .classList.add("hidden");
+                document
+                    .getElementById("affirmationBox")
+                    .classList.add("hidden");
+                document.getElementById("actionBox").classList.add("hidden");
 
                 try {
                     const userPrompt = `Imię: ${userData.name}
@@ -423,13 +416,12 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                                 Authorization: `Bearer ${apiKey}`,
                             },
                             body: JSON.stringify({
-                                model: "gpt-4",
+                                model: "gpt-5.2",
                                 messages: [
                                     { role: "system", content: systemPrompt },
                                     { role: "user", content: userPrompt },
                                 ],
-                                temperature: 0.8,
-                                max_tokens: 500,
+                                stream: true,
                             }),
                         },
                     );
@@ -439,10 +431,7 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                         throw new Error(errorData.error?.message || "Błąd API");
                     }
 
-                    const data = await response.json();
-                    const motivationText = data.choices[0].message.content;
-
-                    displayMotivation(motivationText);
+                    await handleStreamingResponse(response);
                 } catch (error) {
                     showError(
                         `Błąd: ${error.message}. Sprawdź klucz API i połączenie internetowe.`,
@@ -450,115 +439,208 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                 }
             }
 
-            function displayMotivation(text) {
-                document.getElementById("loadingState").classList.add("hidden");
-                document
-                    .getElementById("motivationContent")
-                    .classList.remove("hidden");
-                document
-                    .getElementById("refreshBtn")
-                    .classList.remove("hidden");
+            async function handleStreamingResponse(response) {
+                const motivationBox = document.getElementById("motivationBox");
+                const affirmationBox =
+                    document.getElementById("affirmationBox");
+                const actionBox = document.getElementById("actionBox");
+                const actionText = actionBox.querySelector("p");
 
-                // Ulepszone parsowanie - szukamy sekcji na różne sposoby
-                let motivationPart = "";
-                let affirmationPart = "";
-                let actionPart = "";
+                // State tracking
+                let fullText = "";
+                let shownSections = {
+                    motywacja: false,
+                    afirmacja: false,
+                    dzialanie: false,
+                };
 
-                // Metoda 1: Szukaj po numerach i nagłówkach (najpewniejsza metoda)
-                const regex1 = /1\.\s*(?:MOTYWACJA[:\s]*)?([^]*?)(?=2\.|$)/i;
-                const regex2 = /2\.\s*(?:AFIRMACJA[:\s]*)?([^]*?)(?=3\.|$)/i;
-                const regex3 = /3\.\s*(?:DZIAŁANIE|ZADANIE[:\s]*)?([^]*?)$/i;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = "";
 
-                const match1 = text.match(regex1);
-                const match2 = text.match(regex2);
-                const match3 = text.match(regex3);
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
 
-                if (match1 || match2 || match3) {
-                    // Znaleziono numerowaną strukturę
-                    motivationPart = match1 ? match1[1].trim() : "";
-                    affirmationPart = match2 ? match2[1].trim() : "";
-                    actionPart = match3 ? match3[1].trim() : "";
-                } else {
-                    // Metoda 2: Szukaj po słowach kluczowych
-                    const sections = text.split(
-                        /(?=MOTYWACJA|AFIRMACJA|DZIAŁANIE|ZADANIE)/i,
-                    );
+                        if (done) break;
 
-                    sections.forEach((section) => {
-                        const upper = section.toUpperCase();
-                        const cleanSection = section
-                            .replace(
-                                /^(MOTYWACJA|AFIRMACJA|DZIAŁANIE|ZADANIE):?\s*/i,
-                                "",
-                            )
-                            .trim();
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split("\n");
+                        buffer = lines.pop();
 
-                        if (upper.startsWith("MOTYWACJA") && !motivationPart) {
-                            motivationPart = cleanSection;
-                        } else if (
-                            upper.startsWith("AFIRMACJA") &&
-                            !affirmationPart
-                        ) {
-                            affirmationPart = cleanSection;
-                        } else if (
-                            (upper.startsWith("DZIAŁANIE") ||
-                                upper.startsWith("ZADANIE")) &&
-                            !actionPart
-                        ) {
-                            actionPart = cleanSection;
+                        for (const line of lines) {
+                            if (line.startsWith("data: ")) {
+                                const data = line.slice(6);
+
+                                if (data === "[DONE]") {
+                                    // Show any remaining sections
+                                    const sections = parseFullText(fullText);
+
+                                    if (
+                                        !shownSections.motywacja &&
+                                        sections.motywacja
+                                    ) {
+                                        showCard(
+                                            "motywacja",
+                                            sections.motywacja,
+                                        );
+                                        shownSections.motywacja = true;
+                                    }
+                                    if (
+                                        !shownSections.afirmacja &&
+                                        sections.afirmacja
+                                    ) {
+                                        showCard(
+                                            "afirmacja",
+                                            sections.afirmacja,
+                                        );
+                                        shownSections.afirmacja = true;
+                                    }
+                                    if (
+                                        !shownSections.dzialanie &&
+                                        sections.dzialanie
+                                    ) {
+                                        showCard(
+                                            "dzialanie",
+                                            sections.dzialanie,
+                                        );
+                                        shownSections.dzialanie = true;
+                                    }
+
+                                    document
+                                        .getElementById("refreshBtn")
+                                        .classList.remove("hidden");
+                                    return;
+                                }
+
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const delta =
+                                        parsed.choices[0]?.delta?.content;
+
+                                    if (delta) {
+                                        fullText += delta;
+                                        const sections =
+                                            parseFullText(fullText);
+
+                                        // Show first card when we detect the second section starting
+                                        if (
+                                            !shownSections.motywacja &&
+                                            fullText.includes("===AFIRMACJA===")
+                                        ) {
+                                            showCard(
+                                                "motywacja",
+                                                sections.motywacja,
+                                            );
+                                            shownSections.motywacja = true;
+                                        }
+
+                                        // Show second card when we detect the third section starting
+                                        if (
+                                            !shownSections.afirmacja &&
+                                            fullText.includes("===DZIAŁANIE===")
+                                        ) {
+                                            showCard(
+                                                "afirmacja",
+                                                sections.afirmacja,
+                                            );
+                                            shownSections.afirmacja = true;
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Ignore parsing errors
+                                }
+                            }
                         }
-                    });
-                }
-
-                // Metoda 3: Jeśli nadal nic nie znaleziono, próbuj podzielić po akapitach
-                if (!motivationPart && !affirmationPart && !actionPart) {
-                    const paragraphs = text
-                        .split("\n\n")
-                        .filter((p) => p.trim());
-
-                    if (paragraphs.length >= 3) {
-                        motivationPart = paragraphs[0].trim();
-                        affirmationPart = paragraphs[1].trim();
-                        actionPart = paragraphs[2].trim();
-                    } else if (paragraphs.length === 2) {
-                        motivationPart = paragraphs[0].trim();
-                        affirmationPart = paragraphs[1].trim();
-                    } else {
-                        // Ostateczność - cały tekst jako motywacja
-                        motivationPart = text.trim();
                     }
+
+                    // Final cleanup - show any sections we haven't shown yet
+                    const sections = parseFullText(fullText);
+
+                    if (!shownSections.motywacja && sections.motywacja) {
+                        showCard("motywacja", sections.motywacja);
+                        shownSections.motywacja = true;
+                    }
+                    if (!shownSections.afirmacja && sections.afirmacja) {
+                        showCard("afirmacja", sections.afirmacja);
+                        shownSections.afirmacja = true;
+                    }
+                    if (!shownSections.dzialanie && sections.dzialanie) {
+                        showCard("dzialanie", sections.dzialanie);
+                        shownSections.dzialanie = true;
+                    }
+
+                    document
+                        .getElementById("refreshBtn")
+                        .classList.remove("hidden");
+                } catch (error) {
+                    console.error("Streaming error:", error);
+                    showError(
+                        "Błąd podczas odbierania odpowiedzi: " + error.message,
+                    );
+                }
+            }
+
+            function showCard(section, content) {
+                // Hide loading state when showing first card
+                if (section === "motywacja") {
+                    document
+                        .getElementById("loadingState")
+                        .classList.add("hidden");
+                    document
+                        .getElementById("motivationContent")
+                        .classList.remove("hidden");
+                    document.getElementById("greeting").textContent =
+                        `Cześć ${userData.name}! 👋`;
                 }
 
-                // Czyszczenie z pozostałych prefixów
-                motivationPart = motivationPart
-                    .replace(/^(1\.|MOTYWACJA:?)\s*/i, "")
-                    .trim();
-                affirmationPart = affirmationPart
-                    .replace(/^(2\.|AFIRMACJA:?)\s*/i, "")
-                    .trim();
-                actionPart = actionPart
-                    .replace(/^(3\.|DZIAŁANIE:?|ZADANIE:?)\s*/i, "")
-                    .trim();
+                if (section === "motywacja") {
+                    const motivationBox =
+                        document.getElementById("motivationBox");
+                    motivationBox.innerHTML = content;
+                    motivationBox.classList.remove("hidden");
+                } else if (section === "afirmacja") {
+                    const affirmationBox =
+                        document.getElementById("affirmationBox");
+                    affirmationBox.innerHTML = "✨ " + content;
+                    affirmationBox.classList.remove("hidden");
+                } else if (section === "dzialanie") {
+                    const actionBox = document.getElementById("actionBox");
+                    const actionText = actionBox.querySelector("p");
+                    actionText.innerHTML = content;
+                    actionBox.classList.remove("hidden");
+                }
+            }
 
-                // Budowanie HTML z wyraźnie oddzielonymi boxami
-                let html = `<p style="color: #667eea; font-size: 1.2em; margin-bottom: 20px;">Cześć ${userData.name}! 👋</p>`;
+            function parseFullText(fullText) {
+                const sections = {
+                    motywacja: "",
+                    afirmacja: "",
+                    dzialanie: "",
+                };
 
-                if (motivationPart) {
-                    html += `<div class="motivation-text">${motivationPart}</div>`;
+                // Extract content between markers
+                const motywacjaMatch = fullText.match(
+                    /===MOTYWACJA===\s*([\s\S]*?)(?:===AFIRMACJA===|$)/,
+                );
+                const afirmacjaMatch = fullText.match(
+                    /===AFIRMACJA===\s*([\s\S]*?)(?:===DZIAŁANIE===|$)/,
+                );
+                const dzialanieMatch = fullText.match(
+                    /===DZIAŁANIE===\s*([\s\S]*?)$/,
+                );
+
+                if (motywacjaMatch) {
+                    sections.motywacja = motywacjaMatch[1].trim();
+                }
+                if (afirmacjaMatch) {
+                    sections.afirmacja = afirmacjaMatch[1].trim();
+                }
+                if (dzialanieMatch) {
+                    sections.dzialanie = dzialanieMatch[1].trim();
                 }
 
-                if (affirmationPart) {
-                    html += `<div class="affirmation">✨ ${affirmationPart}</div>`;
-                }
-
-                if (actionPart) {
-                    html += `<div class="action-item">
-                        <h3>📋 Twoje zadanie na dziś:</h3>
-                        <p>${actionPart}</p>
-                    </div>`;
-                }
-
-                document.getElementById("motivationContent").innerHTML = html;
+                return sections;
             }
 
             function showError(message) {
