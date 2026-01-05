@@ -1085,6 +1085,7 @@ Podręcznik akademicki. Rozdział 7.7, 7,8`;
                                         // Show first card when we detect the second section starting
                                         if (
                                             !shownSections.motywacja &&
+                                            sections.motywacja &&
                                             (fullText.includes(
                                                 "===AFIRMACJA===",
                                             ) ||
@@ -1103,6 +1104,7 @@ Podręcznik akademicki. Rozdział 7.7, 7,8`;
                                         // Show second card when we detect the third section starting
                                         if (
                                             !shownSections.afirmacja &&
+                                            sections.afirmacja &&
                                             (fullText.includes(
                                                 "===DZIAŁANIE===",
                                             ) ||
@@ -1118,6 +1120,7 @@ Podręcznik akademicki. Rozdział 7.7, 7,8`;
                                         // Show third card when we detect the fourth section starting
                                         if (
                                             !shownSections.dzialanie &&
+                                            sections.dzialanie &&
                                             fullText.includes("===MEM===")
                                         ) {
                                             showCard(
