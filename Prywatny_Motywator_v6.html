@@ -218,6 +218,119 @@
                 border-left: 5px solid #c62828;
             }
 
+            /* Range input styles */
+            .range-container {
+                padding: 20px 0;
+            }
+
+            .range-wrapper {
+                position: relative;
+                padding: 10px 0;
+            }
+
+            input[type="range"] {
+                width: 100%;
+                height: 8px;
+                border-radius: 5px;
+                background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+                outline: none;
+                -webkit-appearance: none;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: white;
+                cursor: pointer;
+                border: 3px solid #667eea;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            }
+
+            input[type="range"]::-moz-range-thumb {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: white;
+                cursor: pointer;
+                border: 3px solid #667eea;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            }
+
+            .range-labels {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 10px;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .range-value {
+                text-align: center;
+                font-size: 32px;
+                font-weight: bold;
+                color: #667eea;
+                margin: 10px 0;
+            }
+
+            /* Checkbox styles */
+            .checkbox-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-top: 12px;
+            }
+
+            .checkbox-item {
+                display: flex;
+                align-items: center;
+                background: #f8f9fa;
+                padding: 10px 15px;
+                border-radius: 8px;
+                border: 2px solid transparent;
+                cursor: pointer;
+                transition: all 0.3s;
+                flex: 0 0 calc(50% - 6px);
+            }
+
+            .checkbox-item:hover {
+                background: #e9ecef;
+                border-color: #667eea;
+            }
+
+            .checkbox-item input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                margin-right: 10px;
+                cursor: pointer;
+                accent-color: #667eea;
+            }
+
+            .checkbox-item.checked {
+                background: #e8eaf6;
+                border-color: #667eea;
+            }
+
+            .checkbox-item label {
+                margin: 0;
+                cursor: pointer;
+                font-weight: 500;
+                flex: 1;
+            }
+
+            .validation-message {
+                color: #c62828;
+                font-size: 14px;
+                margin-top: 8px;
+                display: none;
+            }
+
+            .validation-message.show {
+                display: block;
+            }
+
             .streaming-cursor {
                 display: inline-block;
                 width: 8px;
@@ -244,25 +357,197 @@
             <h1>💪 Twoja Codzienna Motywacja</h1>
 
             <div id="formScreen">
+                <!-- Pytanie 1: Imię -->
                 <div class="form-group">
-                    <label for="name">📝 Jak masz na imię?</label>
+                    <label for="name">1. Jak masz na imię?</label>
                     <input type="text" id="name" placeholder="Twoje imię..." />
                 </div>
 
+                <!-- Pytanie 2: Samopoczucie w skali 1-10 -->
                 <div class="form-group">
-                    <label for="feeling">💭 Jak się dziś czujesz?</label>
+                    <label for="feeling"
+                        >2. W skali od 1 do 10, jak czujesz się w tym
+                        momencie?</label
+                    >
+                    <div class="range-container">
+                        <div class="range-value" id="feelingValue">5</div>
+                        <div class="range-wrapper">
+                            <input
+                                type="range"
+                                id="feeling"
+                                min="0"
+                                max="10"
+                                value="5"
+                                step="1"
+                            />
+                        </div>
+                        <div class="range-labels">
+                            <span>0 - Źle</span>
+                            <span>5 - Umiarkowanie</span>
+                            <span>10 - Wspaniale</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pytanie 3: Cel -->
+                <div class="form-group">
+                    <label for="goal"
+                        >3. Jaki jeden cel chciałbyś teraz zrealizować?</label
+                    >
                     <textarea
-                        id="feeling"
-                        placeholder="Opisz swoje obecne samopoczucie..."
+                        id="goal"
+                        placeholder="Opisz swój cel..."
                     ></textarea>
                 </div>
 
+                <!-- Pytanie 4: Dlaczego cel jest ważny -->
                 <div class="form-group">
-                    <label for="goals">🎯 Jakie są Twoje cele?</label>
+                    <label for="goalWhy"
+                        >4. Dlaczego ten cel jest dla ciebie ważny?</label
+                    >
                     <textarea
-                        id="goals"
-                        placeholder="Co chcesz osiągnąć?..."
+                        id="goalWhy"
+                        placeholder="Dlaczego to jest istotne dla ciebie..."
                     ></textarea>
+                </div>
+
+                <!-- Pytanie 5: Pozytywna zmiana -->
+                <div class="form-group">
+                    <label for="goalChange"
+                        >5. Jaką pozytywną zmianę zauważysz osiągając ten
+                        cel?</label
+                    >
+                    <textarea
+                        id="goalChange"
+                        placeholder="Co się zmieni na lepsze..."
+                    ></textarea>
+                </div>
+
+                <!-- Pytanie 6: Cechy -->
+                <div class="form-group">
+                    <label
+                        >6. Która z tych cech najbardziej ci w tym pomoże?
+                        (wybierz maksymalnie 3)</label
+                    >
+                    <div class="checkbox-group" id="traitsGroup">
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="trait1"
+                                name="traits"
+                                value="wytrwałość"
+                            />
+                            <label for="trait1">Wytrwałość</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="trait2"
+                                name="traits"
+                                value="ciekawość"
+                            />
+                            <label for="trait2">Ciekawość</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="trait3"
+                                name="traits"
+                                value="kreatywność"
+                            />
+                            <label for="trait3">Kreatywność</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="trait4"
+                                name="traits"
+                                value="życzliwość wobec siebie"
+                            />
+                            <label for="trait4">Życzliwość wobec siebie</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="trait5"
+                                name="traits"
+                                value="odwaga"
+                            />
+                            <label for="trait5">Odwaga</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="trait6"
+                                name="traits"
+                                value="optymizm"
+                            />
+                            <label for="trait6">Optymizm</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="trait7"
+                                name="traits"
+                                value="poczucie humoru"
+                            />
+                            <label for="trait7">Poczucie humoru</label>
+                        </div>
+                    </div>
+                    <div class="validation-message" id="traitsValidation">
+                        Możesz wybrać maksymalnie 3 cechy
+                    </div>
+                </div>
+
+                <!-- Pytanie 7: Czego potrzebujesz -->
+                <div class="form-group">
+                    <label
+                        >7. Czego dzisiaj potrzebujesz? (zaznacz co najmniej
+                        1)</label
+                    >
+                    <div class="checkbox-group" id="needsGroup">
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="need1"
+                                name="needs"
+                                value="motywacja (odpowiedź 3-4 zdania)"
+                            />
+                            <label for="need1"
+                                >Motywacja (odpowiedź 3-4 zdania)</label
+                            >
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="need2"
+                                name="needs"
+                                value="afirmacja"
+                            />
+                            <label for="need2">Afirmacja</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="need3"
+                                name="needs"
+                                value="zadanie"
+                            />
+                            <label for="need3">Zadanie</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input
+                                type="checkbox"
+                                id="need4"
+                                name="needs"
+                                value="mem motywacyjny"
+                            />
+                            <label for="need4">Mem motywacyjny</label>
+                        </div>
+                    </div>
+                    <div class="validation-message" id="needsValidation">
+                        Musisz wybrać co najmniej jedną opcję
+                    </div>
                 </div>
 
                 <button id="generateBtn">Generuj Motywację 🚀</button>
@@ -295,6 +580,18 @@
                         <h3>📋 Twoje zadanie na dziś:</h3>
                         <p></p>
                     </div>
+
+                    <div
+                        class="action-item hidden"
+                        id="memeBox"
+                        style="
+                            background: #fff3e0;
+                            border-left: 5px solid #ff9800;
+                        "
+                    >
+                        <h3>😄 Mem motywacyjny:</h3>
+                        <p></p>
+                    </div>
                 </div>
 
                 <div id="errorState" class="error hidden"></div>
@@ -313,21 +610,134 @@
         <script>
             let userData = {};
 
+            // Range input functionality
+            const feelingInput = document.getElementById("feeling");
+            const feelingValue = document.getElementById("feelingValue");
+
+            feelingInput.addEventListener("input", (e) => {
+                feelingValue.textContent = e.target.value;
+            });
+
+            // Checkbox validation for traits (max 3)
+            const traitsCheckboxes = document.querySelectorAll(
+                'input[name="traits"]',
+            );
+            const traitsValidation =
+                document.getElementById("traitsValidation");
+
+            traitsCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener("change", () => {
+                    const parent = checkbox.closest(".checkbox-item");
+                    if (checkbox.checked) {
+                        parent.classList.add("checked");
+                    } else {
+                        parent.classList.remove("checked");
+                    }
+
+                    const checkedCount = document.querySelectorAll(
+                        'input[name="traits"]:checked',
+                    ).length;
+
+                    if (checkedCount > 3) {
+                        checkbox.checked = false;
+                        parent.classList.remove("checked");
+                        traitsValidation.classList.add("show");
+                        setTimeout(() => {
+                            traitsValidation.classList.remove("show");
+                        }, 3000);
+                    }
+                });
+            });
+
+            // Checkbox styling for needs
+            const needsCheckboxes = document.querySelectorAll(
+                'input[name="needs"]',
+            );
+
+            needsCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener("change", () => {
+                    const parent = checkbox.closest(".checkbox-item");
+                    if (checkbox.checked) {
+                        parent.classList.add("checked");
+                    } else {
+                        parent.classList.remove("checked");
+                    }
+                });
+            });
+
             document
                 .getElementById("generateBtn")
                 .addEventListener("click", async () => {
                     const name = document.getElementById("name").value.trim();
-                    const feeling = document
-                        .getElementById("feeling")
+                    const feeling = document.getElementById("feeling").value;
+                    const goal = document.getElementById("goal").value.trim();
+                    const goalWhy = document
+                        .getElementById("goalWhy")
                         .value.trim();
-                    const goals = document.getElementById("goals").value.trim();
+                    const goalChange = document
+                        .getElementById("goalChange")
+                        .value.trim();
 
-                    if (!name || !feeling || !goals) {
-                        alert("Proszę wypełnić wszystkie pola");
+                    const selectedTraits = Array.from(
+                        document.querySelectorAll(
+                            'input[name="traits"]:checked',
+                        ),
+                    ).map((cb) => cb.value);
+
+                    const selectedNeeds = Array.from(
+                        document.querySelectorAll(
+                            'input[name="needs"]:checked',
+                        ),
+                    ).map((cb) => cb.value);
+
+                    // Validation
+                    if (!name) {
+                        alert("Proszę podać imię");
                         return;
                     }
 
-                    userData = { name, feeling, goals };
+                    if (!goal) {
+                        alert("Proszę opisać swój cel");
+                        return;
+                    }
+
+                    if (!goalWhy) {
+                        alert(
+                            "Proszę opisać, dlaczego ten cel jest dla ciebie ważny",
+                        );
+                        return;
+                    }
+
+                    if (!goalChange) {
+                        alert("Proszę opisać, jaką pozytywną zmianę zauważysz");
+                        return;
+                    }
+
+                    if (selectedTraits.length === 0) {
+                        alert("Proszę wybrać co najmniej jedną cechę");
+                        return;
+                    }
+
+                    if (selectedNeeds.length === 0) {
+                        const needsValidation =
+                            document.getElementById("needsValidation");
+                        needsValidation.classList.add("show");
+                        setTimeout(() => {
+                            needsValidation.classList.remove("show");
+                        }, 3000);
+                        return;
+                    }
+
+                    userData = {
+                        name,
+                        feeling,
+                        goal,
+                        goalWhy,
+                        goalChange,
+                        traits: selectedTraits,
+                        needs: selectedNeeds,
+                    };
+
                     showMotivationScreen();
                     await generateMotivation();
                 });
@@ -367,20 +777,46 @@
                     "c2stcHJvai01QVFNaVBnOE5rTkQxQ3JscUhyelNrMWtMQUN1V1VIUTZyZFdzdGpfTG1Cai02YjJ6ZkhRUGxKVXVoMmNvRG80X2dwVkVUemJaYVQzQmxia0ZKcFNrOWdUQWJlYVNQQjFkU0tGc0lPekVCTjZFYkpKUWZCNGVWVURJU3lya3hXbUtPX3EtWl9JVGllRW5ZUVYwcWlUZml6WVA5OEE=",
                 );
 
-                const systemPrompt = `Jesteś osobistym coachem motywacyjnym. Użytkownik poda Ci swoje imię, obecne samopoczucie i cele.
+                // Tworzenie opisu samopoczucia w skali
+                const feelingDescription = (() => {
+                    const value = parseInt(userData.feeling);
+                    if (value <= 3) return "źle";
+                    if (value <= 5) return "umiarkowanie";
+                    if (value <= 7) return "dobrze";
+                    return "wspaniale";
+                })();
+
+                // Budowanie contentu na podstawie potrzeb użytkownika
+                const needsDescription = userData.needs.join(", ");
+
+                const systemPrompt = `Jesteś osobistym coachem motywacyjnym. Użytkownik wypełnił szczegółowy formularz o swoich celach i potrzebach.
+
+Otrzymałeś następujące informacje:
+- Imię: ${userData.name}
+- Samopoczucie: ${userData.feeling}/10 (${feelingDescription})
+- Cel: ${userData.goal}
+- Dlaczego cel jest ważny: ${userData.goalWhy}
+- Pozytywna zmiana po osiągnięciu celu: ${userData.goalChange}
+- Cechy, które pomogą: ${userData.traits.join(", ")}
+- Czego użytkownik potrzebuje: ${needsDescription}
 
 Odpowiedz w następującym formacie (używając dokładnie tych nagłówków):
 
 ===MOTYWACJA===
-[Krótki, ciepły i inspirujący tekst motywacyjny (2-3 zdania) skierowany bezpośrednio do użytkownika]
+${userData.needs.includes("motywacja (odpowiedź 3-4 zdania)") ? "[Krótki, ciepły i inspirujący tekst motywacyjny (3-4 zdania) skierowany bezpośrednio do użytkownika, odnoszący się do jego celu i wybranych cech charakteru]" : ""}
 
 ===AFIRMACJA===
-[Jedna potężna, pozytywna afirmacja w pierwszej osobie (np. 'Jestem...')]
+${userData.needs.includes("afirmacja") ? "[Jedna potężna, pozytywna afirmacja w pierwszej osobie (np. 'Jestem...'), związana z celem i wybranymi cechami]" : ""}
 
 ===DZIAŁANIE===
-[Jedno konkretne, praktyczne działanie na dziś (jasne i wykonalne zadanie)]
+${userData.needs.includes("zadanie") ? "[Jedno konkretne, praktyczne działanie na dziś (jasne i wykonalne zadanie związane z celem)]" : ""}
 
-Ton: ciepły, empatyczny, ale konkretny. Dopasuj motywację do samopoczucia i celów użytkownika.`;
+===MEM===
+${userData.needs.includes("mem motywacyjny") ? "[Krótki, humorystyczny mem motywacyjny związany z celem - w stylu internetowego mema, lekki i zabawny ale motywujący]" : ""}
+
+Uwaga: Generuj TYLKO te sekcje, których użytkownik potrzebuje. Jeśli użytkownik nie wybrał danej opcji, pomiń całą sekcję (włącznie z nagłówkiem).
+
+Ton: ciepły, empatyczny, ale konkretny. Dopasuj treść do samopoczucia, celów i wybranych cech użytkownika.`;
 
                 // Reset display
                 document
@@ -399,13 +835,10 @@ Ton: ciepły, empatyczny, ale konkretny. Dopasuj motywację do samopoczucia i ce
                     .getElementById("affirmationBox")
                     .classList.add("hidden");
                 document.getElementById("actionBox").classList.add("hidden");
+                document.getElementById("memeBox").classList.add("hidden");
 
                 try {
-                    const userPrompt = `Imię: ${userData.name}
-Obecne samopoczucie: ${userData.feeling}
-Cele: ${userData.goals}
-
-Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
+                    const userPrompt = `Wygeneruj spersonalizowaną treść motywacyjną według wskazanych potrzeb.`;
 
                     const response = await fetch(
                         "https://api.openai.com/v1/chat/completions",
@@ -444,7 +877,7 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                 const affirmationBox =
                     document.getElementById("affirmationBox");
                 const actionBox = document.getElementById("actionBox");
-                const actionText = actionBox.querySelector("p");
+                const memeBox = document.getElementById("memeBox");
 
                 // State tracking
                 let fullText = "";
@@ -452,6 +885,7 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                     motywacja: false,
                     afirmacja: false,
                     dzialanie: false,
+                    mem: false,
                 };
 
                 const reader = response.body.getReader();
@@ -506,6 +940,10 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                                         );
                                         shownSections.dzialanie = true;
                                     }
+                                    if (!shownSections.mem && sections.mem) {
+                                        showCard("mem", sections.mem);
+                                        shownSections.mem = true;
+                                    }
 
                                     document
                                         .getElementById("refreshBtn")
@@ -526,7 +964,13 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                                         // Show first card when we detect the second section starting
                                         if (
                                             !shownSections.motywacja &&
-                                            fullText.includes("===AFIRMACJA===")
+                                            (fullText.includes(
+                                                "===AFIRMACJA===",
+                                            ) ||
+                                                fullText.includes(
+                                                    "===DZIAŁANIE===",
+                                                ) ||
+                                                fullText.includes("===MEM==="))
                                         ) {
                                             showCard(
                                                 "motywacja",
@@ -538,13 +982,28 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                                         // Show second card when we detect the third section starting
                                         if (
                                             !shownSections.afirmacja &&
-                                            fullText.includes("===DZIAŁANIE===")
+                                            (fullText.includes(
+                                                "===DZIAŁANIE===",
+                                            ) ||
+                                                fullText.includes("===MEM==="))
                                         ) {
                                             showCard(
                                                 "afirmacja",
                                                 sections.afirmacja,
                                             );
                                             shownSections.afirmacja = true;
+                                        }
+
+                                        // Show third card when we detect the fourth section starting
+                                        if (
+                                            !shownSections.dzialanie &&
+                                            fullText.includes("===MEM===")
+                                        ) {
+                                            showCard(
+                                                "dzialanie",
+                                                sections.dzialanie,
+                                            );
+                                            shownSections.dzialanie = true;
                                         }
                                     }
                                 } catch (e) {
@@ -568,6 +1027,10 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                     if (!shownSections.dzialanie && sections.dzialanie) {
                         showCard("dzialanie", sections.dzialanie);
                         shownSections.dzialanie = true;
+                    }
+                    if (!shownSections.mem && sections.mem) {
+                        showCard("mem", sections.mem);
+                        shownSections.mem = true;
                     }
 
                     document
@@ -609,6 +1072,11 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                     const actionText = actionBox.querySelector("p");
                     actionText.innerHTML = content;
                     actionBox.classList.remove("hidden");
+                } else if (section === "mem") {
+                    const memeBox = document.getElementById("memeBox");
+                    const memeText = memeBox.querySelector("p");
+                    memeText.innerHTML = content;
+                    memeBox.classList.remove("hidden");
                 }
             }
 
@@ -617,18 +1085,20 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                     motywacja: "",
                     afirmacja: "",
                     dzialanie: "",
+                    mem: "",
                 };
 
                 // Extract content between markers
                 const motywacjaMatch = fullText.match(
-                    /===MOTYWACJA===\s*([\s\S]*?)(?:===AFIRMACJA===|$)/,
+                    /===MOTYWACJA===\s*([\s\S]*?)(?:===AFIRMACJA===|===DZIAŁANIE===|===MEM===|$)/,
                 );
                 const afirmacjaMatch = fullText.match(
-                    /===AFIRMACJA===\s*([\s\S]*?)(?:===DZIAŁANIE===|$)/,
+                    /===AFIRMACJA===\s*([\s\S]*?)(?:===DZIAŁANIE===|===MEM===|$)/,
                 );
                 const dzialanieMatch = fullText.match(
-                    /===DZIAŁANIE===\s*([\s\S]*?)$/,
+                    /===DZIAŁANIE===\s*([\s\S]*?)(?:===MEM===|$)/,
                 );
+                const memMatch = fullText.match(/===MEM===\s*([\s\S]*?)$/);
 
                 if (motywacjaMatch) {
                     sections.motywacja = motywacjaMatch[1].trim();
@@ -638,6 +1108,9 @@ Wygeneruj spersonalizowaną treść motywacyjną na dziś.`;
                 }
                 if (dzialanieMatch) {
                     sections.dzialanie = dzialanieMatch[1].trim();
+                }
+                if (memMatch) {
+                    sections.mem = memMatch[1].trim();
                 }
 
                 return sections;
