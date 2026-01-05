@@ -733,11 +733,9 @@
                                 type="checkbox"
                                 id="need1"
                                 name="needs"
-                                value="motywacja (odpowiedź 3-4 zdania)"
+                                value="motywacja"
                             />
-                            <label for="need1"
-                                >Motywacja (odpowiedź 3-4 zdania)</label
-                            >
+                            <label for="need1">Motywacja</label>
                         </div>
                         <div class="checkbox-item">
                             <input
@@ -1053,7 +1051,7 @@ Otrzymałeś następujące informacje:
 Odpowiedz w następującym formacie (używając dokładnie tych nagłówków):
 
 ===MOTYWACJA===
-${userData.needs.includes("motywacja (odpowiedź 3-4 zdania)") ? "[Krótki, ciepły i inspirujący tekst motywacyjny (3-4 zdania) skierowany bezpośrednio do użytkownika, odnoszący się do jego celu i wybranych cech charakteru]" : ""}
+${userData.needs.includes("motywacja") ? "[Krótki, ciepły i inspirujący tekst motywacyjny (3-4 zdania) skierowany bezpośrednio do użytkownika, odnoszący się do jego celu i wybranych cech charakteru]" : ""}
 
 ===AFIRMACJA===
 ${userData.needs.includes("afirmacja") ? "[Jedna potężna, pozytywna afirmacja w pierwszej osobie (np. 'Jestem...'), związana z celem i wybranymi cechami]" : ""}
