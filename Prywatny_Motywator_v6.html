@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Dobrodzień</title>
         <style>
+            @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap");
+
             * {
                 margin: 0;
                 padding: 0;
@@ -12,8 +14,10 @@
             }
 
             body {
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    "Helvetica Neue", Arial, sans-serif;
+                background: linear-gradient(135deg, #f5f7f6 0%, #e8f0ed 100%);
                 min-height: 100vh;
                 display: flex;
                 justify-content: center;
@@ -25,24 +29,29 @@
             .container {
                 background: white;
                 border-radius: 20px;
-                padding: 40px;
+                padding: 48px;
                 max-width: 600px;
                 width: 100%;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 4px 20px rgba(76, 110, 90, 0.12);
+                border: 1px solid rgba(76, 110, 90, 0.1);
             }
 
             h1 {
-                color: #667eea;
+                font-family: "Playfair Display", Georgia, serif;
+                color: #3d5a4a;
                 text-align: center;
-                margin-bottom: 15px;
-                font-size: 2em;
+                margin-bottom: 12px;
+                font-size: 2.5em;
+                font-weight: 700;
+                letter-spacing: -0.5px;
             }
 
             .app-description {
-                color: #999;
+                color: #6b8578;
                 font-size: 0.95em;
                 line-height: 1.6;
-                margin-bottom: 30px;
+                margin-bottom: 35px;
+                text-align: center;
             }
 
             .form-group {
@@ -52,24 +61,29 @@
             label {
                 display: block;
                 margin-bottom: 8px;
-                color: #333;
+                color: #3d5a4a;
                 font-weight: 600;
+                font-size: 0.95em;
             }
 
             input[type="text"],
             textarea {
                 width: 100%;
-                padding: 12px;
-                border: 2px solid #e0e0e0;
-                border-radius: 8px;
+                padding: 12px 16px;
+                border: 1.5px solid #d4e0da;
+                border-radius: 10px;
                 font-size: 16px;
-                transition: border-color 0.3s;
+                transition: all 0.2s;
+                font-family: inherit;
+                background: #fafcfb;
             }
 
             input[type="text"]:focus,
             textarea:focus {
                 outline: none;
-                border-color: #667eea;
+                border-color: #5a8270;
+                box-shadow: 0 0 0 3px rgba(90, 130, 112, 0.1);
+                background: white;
             }
 
             textarea {
@@ -79,22 +93,22 @@
 
             button {
                 width: 100%;
-                padding: 15px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 15px 24px;
+                background: linear-gradient(135deg, #5a8270 0%, #4a6f5e 100%);
                 color: white;
                 border: none;
-                border-radius: 8px;
-                font-size: 18px;
+                border-radius: 10px;
+                font-size: 16px;
                 font-weight: 600;
                 cursor: pointer;
-                transition:
-                    transform 0.2s,
-                    box-shadow 0.2s;
+                transition: all 0.3s ease;
+                font-family: inherit;
+                box-shadow: 0 2px 8px rgba(90, 130, 112, 0.2);
             }
 
             button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(90, 130, 112, 0.3);
             }
 
             button:active {
@@ -112,53 +126,53 @@
             }
 
             .motivation-content {
-                margin-top: 20px;
+                margin-top: 25px;
             }
 
             .motivation-text {
-                background: #f8f9fa;
-                padding: 25px;
-                border-radius: 12px;
-                border-left: 5px solid #667eea;
-                margin-bottom: 20px;
-                line-height: 1.8;
-                color: #333;
+                background: linear-gradient(135deg, #f9fbfa 0%, #f3f7f5 100%);
+                padding: 26px;
+                border-radius: 14px;
+                border: 1px solid #e3ebe7;
+                border-left: 4px solid #5a8270;
+                margin-bottom: 18px;
+                line-height: 1.7;
+                color: #2d3e35;
                 white-space: pre-wrap;
                 min-height: 60px;
                 opacity: 0;
-                transform: translateY(20px);
-                animation: slideIn 0.5s ease forwards;
-                transition: all 0.15s ease;
+                transform: translateY(10px);
+                animation: slideIn 0.4s ease forwards;
             }
 
             .affirmation {
-                background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+                background: linear-gradient(135deg, #5a8270 0%, #4a6f5e 100%);
                 color: white;
-                padding: 20px;
-                border-radius: 12px;
+                padding: 28px;
+                border-radius: 14px;
                 text-align: center;
                 font-size: 1.2em;
                 font-weight: 600;
-                margin-bottom: 20px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                margin-bottom: 18px;
+                box-shadow: 0 4px 16px rgba(90, 130, 112, 0.25);
                 min-height: 60px;
                 opacity: 0;
-                transform: translateY(20px);
-                animation: slideIn 0.5s ease forwards;
-                transition: all 0.15s ease;
+                transform: translateY(10px);
+                animation: slideIn 0.4s ease forwards;
+                line-height: 1.6;
             }
 
             .action-item {
-                background: #e8f5e9;
-                padding: 20px;
-                border-radius: 12px;
-                border-left: 5px solid #4caf50;
-                margin-bottom: 20px;
+                background: linear-gradient(135deg, #e8f3ed 0%, #dff0e6 100%);
+                padding: 26px;
+                border-radius: 14px;
+                border: 1px solid #c8e0d4;
+                border-left: 4px solid #4a8c6a;
+                margin-bottom: 18px;
                 min-height: 60px;
                 opacity: 0;
-                transform: translateY(20px);
-                animation: slideIn 0.5s ease forwards;
-                transition: all 0.15s ease;
+                transform: translateY(10px);
+                animation: slideIn 0.4s ease forwards;
             }
 
             @keyframes slideIn {
@@ -169,8 +183,10 @@
             }
 
             .action-item h3 {
-                color: #2e7d32;
-                margin-bottom: 10px;
+                color: #2d5741;
+                margin-bottom: 12px;
+                font-weight: 700;
+                font-size: 1.1em;
             }
 
             .button-group {
@@ -184,26 +200,26 @@
             }
 
             .btn-secondary {
-                background: #6c757d;
+                background: linear-gradient(135deg, #6b8578 0%, #5a7068 100%);
             }
 
             .btn-secondary:hover {
-                box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+                box-shadow: 0 4px 12px rgba(107, 133, 120, 0.3);
             }
 
             .loading {
                 text-align: center;
                 padding: 40px;
-                color: #667eea;
+                color: #6b8578;
             }
 
             .spinner {
-                border: 4px solid #f3f3f3;
-                border-top: 4px solid #667eea;
+                border: 3px solid #e8f0ed;
+                border-top: 3px solid #5a8270;
                 border-radius: 50%;
                 width: 40px;
                 height: 40px;
-                animation: spin 1s linear infinite;
+                animation: spin 0.8s linear infinite;
                 margin: 0 auto 20px;
             }
 
@@ -224,7 +240,7 @@
             .progress-bar {
                 width: 100%;
                 height: 4px;
-                background-color: #e0e0e0;
+                background-color: #e8f0ed;
                 border-radius: 2px;
                 overflow: hidden;
                 position: relative;
@@ -237,7 +253,7 @@
                 left: 0;
                 height: 100%;
                 width: 30%;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #5a8270 0%, #4a6f5e 100%);
                 animation: indeterminate 1.5s ease-in-out infinite;
             }
 
@@ -251,12 +267,12 @@
             }
 
             .error {
-                background: #ffebee;
-                color: #c62828;
+                background: #fef6f5;
+                color: #a85a50;
                 padding: 20px;
                 border-radius: 12px;
                 margin-top: 20px;
-                border-left: 5px solid #c62828;
+                border-left: 4px solid #c77a6e;
             }
 
             /* Range input styles */
@@ -273,7 +289,7 @@
                 width: 100%;
                 height: 8px;
                 border-radius: 5px;
-                background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(to right, #5a8270 0%, #4a6f5e 100%);
                 outline: none;
                 -webkit-appearance: none;
             }
@@ -286,7 +302,7 @@
                 border-radius: 50%;
                 background: white;
                 cursor: pointer;
-                border: 3px solid #667eea;
+                border: 3px solid #5a8270;
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
             }
 
@@ -296,7 +312,7 @@
                 border-radius: 50%;
                 background: white;
                 cursor: pointer;
-                border: 3px solid #667eea;
+                border: 3px solid #5a8270;
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
             }
 
@@ -305,14 +321,14 @@
                 justify-content: space-between;
                 margin-top: 10px;
                 font-size: 14px;
-                color: #666;
+                color: #6b8578;
             }
 
             .range-value {
                 text-align: center;
                 font-size: 32px;
                 font-weight: bold;
-                color: #667eea;
+                color: #5a8270;
                 margin: 10px 0;
             }
 
@@ -337,8 +353,8 @@
             }
 
             .checkbox-item:hover {
-                background: #e9ecef;
-                border-color: #667eea;
+                background: #f3f7f5;
+                border-color: #5a8270;
             }
 
             .checkbox-item input[type="checkbox"] {
@@ -346,12 +362,12 @@
                 height: 20px;
                 margin-right: 10px;
                 cursor: pointer;
-                accent-color: #667eea;
+                accent-color: #5a8270;
             }
 
             .checkbox-item.checked {
-                background: #e8eaf6;
-                border-color: #667eea;
+                background: #e8f3ed;
+                border-color: #5a8270;
             }
 
             .checkbox-item label {
@@ -362,7 +378,7 @@
             }
 
             .validation-message {
-                color: #c62828;
+                color: #a85a50;
                 font-size: 14px;
                 margin-top: 8px;
                 display: none;
@@ -376,7 +392,7 @@
                 display: inline-block;
                 width: 8px;
                 height: 1em;
-                background: #667eea;
+                background: #5a8270;
                 animation: blink 1s infinite;
                 margin-left: 2px;
             }
@@ -400,12 +416,13 @@
 
             <div id="formScreen">
                 <p class="app-description">
-                    WERSJA 11 - Dobrodzień to krótka aplikacja–poradnik motywacyjny
-                    oparta na założeniach psychologii pozytywnej. Użytkownik
-                    codziennie otrzymuje jedną treść wspierającą motywację: krótki
-                    tekst, afirmację, element humorystyczny lub proste zadanie do
-                    wykonania. Celem aplikacji jest wzmacnianie poczucia sprawczości
-                    i dobrostanu bez presji i ocen.
+                    WERSJA 12 - Dobrodzień to krótka aplikacja–poradnik
+                    motywacyjny oparta na założeniach psychologii pozytywnej.
+                    Użytkownik codziennie otrzymuje jedną treść wspierającą
+                    motywację: krótki tekst, afirmację, element humorystyczny
+                    lub proste zadanie do wykonania. Celem aplikacji jest
+                    wzmacnianie poczucia sprawczości i dobrostanu bez presji i
+                    ocen.
                 </p>
                 <!-- Pytanie 1: Imię -->
                 <div class="form-group">
