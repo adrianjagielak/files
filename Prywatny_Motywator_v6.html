@@ -749,6 +749,26 @@
                 });
             });
 
+            // Make entire checkbox container clickable
+            document.querySelectorAll(".checkbox-item").forEach((item) => {
+                item.addEventListener("click", (e) => {
+                    // Don't toggle if clicking directly on checkbox or label (they handle it themselves)
+                    if (
+                        e.target.tagName === "INPUT" ||
+                        e.target.tagName === "LABEL"
+                    ) {
+                        return;
+                    }
+
+                    const checkbox = item.querySelector(
+                        'input[type="checkbox"]',
+                    );
+                    if (checkbox) {
+                        checkbox.click();
+                    }
+                });
+            });
+
             document
                 .getElementById("generateBtn")
                 .addEventListener("click", async () => {
