@@ -418,6 +418,151 @@
                     opacity: 0;
                 }
             }
+
+            /* Mobile Responsive Styles */
+            @media (max-width: 768px) {
+                body {
+                    padding: 12px;
+                    padding-top: 20px;
+                }
+
+                .container {
+                    padding: 24px 20px;
+                    border-radius: 16px;
+                }
+
+                h1 {
+                    font-size: 1.8em;
+                    margin-bottom: 10px;
+                }
+
+                .app-description {
+                    font-size: 0.9em;
+                    margin-bottom: 24px;
+                }
+
+                .form-group {
+                    margin-bottom: 16px;
+                }
+
+                label {
+                    font-size: 0.9em;
+                    margin-bottom: 6px;
+                }
+
+                input[type="text"],
+                textarea {
+                    padding: 10px 14px;
+                    font-size: 16px;
+                    border-radius: 8px;
+                }
+
+                button {
+                    padding: 13px 20px;
+                    font-size: 16px;
+                    border-radius: 8px;
+                }
+
+                .motivation-content {
+                    margin-top: 20px;
+                }
+
+                .motivation-text {
+                    padding: 18px;
+                    border-radius: 12px;
+                    margin-bottom: 14px;
+                    font-size: 0.95em;
+                }
+
+                .affirmation {
+                    padding: 20px;
+                    border-radius: 12px;
+                    font-size: 1.05em;
+                    margin-bottom: 14px;
+                }
+
+                .action-item {
+                    padding: 18px;
+                    border-radius: 12px;
+                    margin-bottom: 14px;
+                }
+
+                .action-item h3 {
+                    font-size: 1em;
+                    margin-bottom: 10px;
+                }
+
+                .meme-box {
+                    padding: 18px;
+                    border-radius: 12px;
+                    margin-bottom: 14px;
+                }
+
+                .meme-box h3 {
+                    font-size: 1em;
+                    margin-bottom: 10px;
+                }
+
+                .button-group {
+                    gap: 8px;
+                    margin-top: 16px;
+                }
+
+                .loading-state,
+                .error-state {
+                    padding: 20px;
+                    font-size: 1em;
+                }
+
+                .loading {
+                    padding: 30px;
+                }
+
+                .error {
+                    padding: 16px;
+                    margin-top: 16px;
+                }
+
+                .range-container {
+                    padding: 16px 0;
+                }
+
+                .range-value {
+                    font-size: 28px;
+                }
+            }
+
+            /* Extra small mobile devices (iPhone SE, etc.) */
+            @media (max-width: 375px) {
+                body {
+                    padding: 8px;
+                    padding-top: 16px;
+                }
+
+                .container {
+                    padding: 20px 16px;
+                    border-radius: 14px;
+                }
+
+                h1 {
+                    font-size: 1.6em;
+                }
+
+                .motivation-text,
+                .action-item,
+                .meme-box {
+                    padding: 16px;
+                }
+
+                .affirmation {
+                    padding: 18px;
+                    font-size: 1em;
+                }
+
+                .range-value {
+                    font-size: 24px;
+                }
+            }
         </style>
     </head>
     <body>
@@ -639,7 +784,7 @@
                 <div id="motivationContent" class="motivation-content hidden">
                     <p
                         style="
-                            color: #667eea;
+                            color: #5a8270;
                             font-size: 1.2em;
                             margin-bottom: 20px;
                         "
@@ -682,11 +827,9 @@
 
                 <div class="button-group">
                     <button id="refreshBtn" class="hidden">
-                        🔄 Nowa Motywacja
+                        Nowa Motywacja
                     </button>
-                    <button id="backBtn" class="btn-secondary">
-                        ⬅️ Powrót
-                    </button>
+                    <button id="backBtn" class="btn-secondary">Powrót</button>
                 </div>
             </div>
         </div>
