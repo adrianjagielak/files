@@ -394,6 +394,7 @@
         </style>
     </head>
     <body>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <div class="container">
             <h1>Dobrodzień</h1>
             <p class="app-description">
@@ -1184,22 +1185,22 @@ Podręcznik akademicki. Rozdział 7.7, 7,8`;
                 if (section === "motywacja") {
                     const motivationBox =
                         document.getElementById("motivationBox");
-                    motivationBox.innerHTML = content;
+                    motivationBox.innerHTML = marked.parse(content);
                     motivationBox.classList.remove("hidden");
                 } else if (section === "afirmacja") {
                     const affirmationBox =
                         document.getElementById("affirmationBox");
-                    affirmationBox.innerHTML = "✨ " + content;
+                    affirmationBox.innerHTML = "✨ " + marked.parse(content);
                     affirmationBox.classList.remove("hidden");
                 } else if (section === "dzialanie") {
                     const actionBox = document.getElementById("actionBox");
                     const actionText = actionBox.querySelector("p");
-                    actionText.innerHTML = content;
+                    actionText.innerHTML = marked.parse(content);
                     actionBox.classList.remove("hidden");
                 } else if (section === "mem") {
                     const memeBox = document.getElementById("memeBox");
                     const memeText = memeBox.querySelector("p");
-                    memeText.innerHTML = content;
+                    memeText.innerHTML = marked.parse(content);
                     memeBox.classList.remove("hidden");
                 }
             }
