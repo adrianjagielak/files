@@ -1,0 +1,2381 @@
+<!doctype html>
+<html lang="pl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Quiz Psychologii Osobowości</title>
+        <script
+            crossorigin
+            src="https://unpkg.com/react@18/umd/react.production.min.js"
+        ></script>
+        <script
+            crossorigin
+            src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+        ></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Karla:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Karla", sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+
+            .quiz-container {
+                animation: fadeIn 0.6s ease-out;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+
+            @keyframes pulse {
+                0%,
+                100% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.05);
+                }
+            }
+
+            .option-button {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                animation: slideIn 0.4s ease-out;
+                animation-fill-mode: both;
+            }
+
+            .option-button:hover:not(:disabled) {
+                transform: translateX(8px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            }
+
+            .correct-answer {
+                animation: pulse 0.5s ease-in-out;
+            }
+
+            .progress-bar {
+                transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .brain-icon {
+                animation: float 3s ease-in-out infinite;
+            }
+
+            @keyframes float {
+                0%,
+                100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-10px);
+                }
+            }
+
+            .result-card {
+                animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+
+            @keyframes scaleIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.8);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            .explanation-box {
+                animation: expandDown 0.4s ease-out;
+            }
+
+            @keyframes expandDown {
+                from {
+                    opacity: 0;
+                    max-height: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    max-height: 500px;
+                    transform: translateY(0);
+                }
+            }
+
+            .checkbox-custom {
+                width: 24px;
+                height: 24px;
+                border: 2px solid #cbd5e1;
+                border-radius: 6px;
+                margin-right: 12px;
+                flex-shrink: 0;
+                position: relative;
+                transition: all 0.2s;
+            }
+
+            .checkbox-custom.checked {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-color: #667eea;
+            }
+
+            .checkbox-custom.checked::after {
+                content: "✓";
+                position: absolute;
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root"></div>
+
+        <script type="text/babel">
+            const { useState, useEffect } = React;
+
+            // Funkcja do tasowania tablicy (Fisher-Yates shuffle)
+            const shuffleArray = (array) => {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            };
+
+            // Funkcja do randomizacji odpowiedzi w pytaniu
+            const shuffleQuestionOptions = (question) => {
+                const indices = question.options.map((_, i) => i);
+                const shuffledIndices = shuffleArray(indices);
+
+                // Obsługa zarówno single correct (number) jak i multiple correct (array)
+                const isMultiple = Array.isArray(question.correct);
+                const newCorrect = isMultiple
+                    ? question.correct.map((c) => shuffledIndices.indexOf(c))
+                    : shuffledIndices.indexOf(question.correct);
+
+                return {
+                    ...question,
+                    options: shuffledIndices.map((i) => question.options[i]),
+                    correct: newCorrect,
+                    isMultipleCorrect: isMultiple,
+                };
+            };
+
+            const CheckCircle = ({ className, size = 24 }) => (
+                <svg
+                    className={className}
+                    width={size}
+                    height={size}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+            );
+
+            const XCircle = ({ className, size = 24 }) => (
+                <svg
+                    className={className}
+                    width={size}
+                    height={size}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+            );
+
+            const Award = ({ className, size = 24, strokeWidth = 2 }) => (
+                <svg
+                    className={className}
+                    width={size}
+                    height={size}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <circle cx="12" cy="8" r="7" />
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                </svg>
+            );
+
+            const RefreshCw = ({ size = 24 }) => (
+                <svg
+                    width={size}
+                    height={size}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+            );
+
+            const Brain = ({ size = 64, className, strokeWidth = 1.5 }) => (
+                <svg
+                    className={className}
+                    width={size}
+                    height={size}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+                    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+                </svg>
+            );
+
+            // ============================================================
+            // WKLEJ TUTAJ PYTANIA Z CHATGPT (między [ i ])
+            // ============================================================
+            const QUESTIONS_DATA = [
+                {
+                    question:
+                        "Które ujęcie NAJLEPIEJ oddaje różnicę między potocznym a naukowym rozumieniem „osobowości” w psychologii akademickiej?",
+                    options: [
+                        "Potoczne ujęcie opisuje styl społecznej autoprezentacji, a naukowe – względnie trwałe wzorce funkcjonowania psychicznego ujawniające się w czasie i sytuacjach",
+                        "Potoczne ujęcie dotyczy wyłącznie temperamentu, a naukowe – wyłącznie charakteru moralnego",
+                        "Potoczne ujęcie jest zawsze trafniejsze klinicznie, a naukowe – wyłącznie statystyczne i bez wartości diagnostycznej",
+                        "Potoczne ujęcie operuje wyłącznie typami, a naukowe wyłącznie cechami i całkowicie odrzuca procesy",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "W języku potocznym „osobowość” bywa skrótem dla wrażeń interpersonalnych (urok, „charakter”, styl bycia). W ujęciu naukowym chodzi o względnie trwałe, systematyczne wzorce poznawczo-emocjonalno-motywacyjne, które przewidują zachowanie w wielu kontekstach. Ta różnica jest kluczowa dla operacjonalizacji, pomiaru i budowy teorii o mocy wyjaśniającej.",
+                    category:
+                        "Osobowość jako przedmiot psychologii - definicje",
+                },
+                {
+                    question:
+                        "W strukturze teorii osobowości, które rozróżnienie NAJLEPIEJ odpowiada różnicy między konstruktem „cecha” a „typ”?",
+                    options: [
+                        "Cechy są zwykle wymiarami ciągłymi, a typy klasyfikują osoby do kategorii jakościowo odmiennych",
+                        "Cechy dotyczą wyłącznie nieświadomości, a typy wyłącznie zachowań jawnych",
+                        "Cechy są zawsze wrodzone, a typy zawsze nabyte społecznie",
+                        "Cechy wyjaśniają tylko emocje, a typy tylko motywację",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "W podejściu cechowym zakłada się kontinuum nasilenia, co umożliwia skalowanie i analizę wariancji międzyosobniczej. Typologie najczęściej wprowadzają kategorie (np. introwertyk/ekstrawertyk w sensie typologicznym), co bywa użyteczne klinicznie, ale grozi utratą informacji. Współczesna psychometria zwykle preferuje wymiary, a typy traktuje ostrożnie i warunkowo.",
+                    category:
+                        "Osobowość jako przedmiot psychologii - cechy vs typy",
+                },
+                {
+                    question:
+                        "Które kryterium NAJLEPIEJ odróżnia „dobrą teorię osobowości” od atrakcyjnej narracji klinicznej?",
+                    options: [
+                        "Zdolność generowania falsyfikowalnych predykcji i integracji z danymi z różnych metod pomiaru",
+                        "Wewnętrzna spójność metafor i zgodność z intuicją terapeuty",
+                        "Maksymalna złożoność pojęciowa i liczba konstruktów",
+                        "Unikanie wszelkich odniesień do biologii, aby zachować „humanistyczny” charakter",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Teoria naukowa musi umożliwiać testowanie: tworzyć przewidywania, które można obalić danymi. W psychologii osobowości liczy się też integracja wieloźródłowa (samoopis, informanci, zachowanie, wskaźniki biologiczne). Narracje kliniczne mogą być użyteczne heurystycznie, ale bez sprawdzalnych konsekwencji nie spełniają kryteriów teorii naukowej.",
+                    category:
+                        "Osobowość jako przedmiot psychologii - kryteria dobrej teorii",
+                },
+                {
+                    question:
+                        "Które elementy NALEŻĄ do procesów osobowości w sensie współczesnym (zaznacz 2 poprawne)?",
+                    options: [
+                        "Samoregulacja celów i konfliktów motywacyjnych",
+                        "Jedynie stałe cechy temperamentu mierzone w kwestionariuszu",
+                        "Dynamika emocji (reaktywność i powrót do bazowego poziomu)",
+                        "Wyłącznie typologiczne kategorie kliniczne (np. „osobowość X”)",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Procesy osobowości obejmują mechanizmy „jak” funkcjonowanie przebiega: regulację, emocje, sprzężenia zwrotne i adaptację do sytuacji. Samoregulacja opisuje kontrolę impulsów, priorytety celów i strategie radzenia sobie. Dynamika emocji (np. szybkość wygaszania pobudzenia) jest procesowa i przewiduje zachowanie ponad poziomem cech.",
+                    category: "Osobowość jako przedmiot psychologii - procesy",
+                },
+                {
+                    question:
+                        "W modelu topograficznym Freuda, które stwierdzenie jest NAJTRAFNIEJSZE?",
+                    options: [
+                        "Przedświadomość zawiera treści łatwo dostępne świadomości przy minimalnym wysiłku, odróżniając je od treści wypartych",
+                        "Nieświadomość topograficzna jest tożsama z superego",
+                        "Świadomość obejmuje wszystkie pragnienia i impulsy id, o ile są biologicznie silne",
+                        "Przedświadomość jest z definicji niedostępna, bo podlega wyłącznie mechanizmom pierwotnym",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Topograficznie Freud wyróżniał świadomość, przedświadomość i nieświadomość. Przedświadomość obejmuje treści dostępne po „przywołaniu” (np. wspomnienia), bez konieczności znoszenia oporu. Treści wyparte pozostają w nieświadomości i wymagają pracy analitycznej, bo są bronione przez mechanizmy obronne.",
+                    category: "Freud - model topograficzny",
+                },
+                {
+                    question:
+                        "Która sekwencja konfliktów i dominujących tematów NAJLEPIEJ pasuje do stadiów psychoseksualnych Freuda (kolejność rozwojowa)?",
+                    options: [
+                        "Oralne → analne → falliczne → latencji → genitalne",
+                        "Oralne → falliczne → analne → latencji → genitalne",
+                        "Analne → oralne → falliczne → genitalne → latencji",
+                        "Falliczne → oralne → analne → latencji → genitalne",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Freud opisywał rozwój jako przesuwanie się ogniska libido: od oralnego (zależność i gratyfikacja), przez analne (kontrola i autonomia), falliczne (kompleks Edypa), okres latencji (względne wyciszenie) po stadium genitalne (dojrzała seksualność i relacje). Pomylenie kolejności zmienia interpretację fiksacji i typowych konfliktów. W klinice sekwencja ta bywa używana do hipotez o źródłach stylu obronnego i relacyjnego.",
+                    category: "Freud - stadia psychoseksualne",
+                },
+                {
+                    question:
+                        "W modelu strukturalnym Freuda, które stwierdzenie NAJLEPIEJ opisuje rolę ego?",
+                    options: [
+                        "Ego pośredniczy między id, superego i rzeczywistością, operując m.in. mechanizmami obronnymi i funkcjami testowania realności",
+                        "Ego jest źródłem popędów i działa wyłącznie według zasady przyjemności",
+                        "Ego jest w pełni nieświadome i tożsame z archetypami",
+                        "Ego odpowiada wyłącznie za internalizację norm moralnych",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Ego w ujęciu Freuda pełni funkcję mediatora: negocjuje żądania id, zakazy superego i ograniczenia rzeczywistości. Jest związane z zasadą rzeczywistości, planowaniem, odraczaniem gratyfikacji i obronami. Superego jest bardziej moralno-normatywne, a id bardziej popędowe, więc redukcja ego do któregoś z nich jest błędem teoretycznym.",
+                    category: "Freud - model strukturalny",
+                },
+                {
+                    question:
+                        "Które elementy są kluczowe dla jungowskiej indywiduacji (zaznacz 2 poprawne)?",
+                    options: [
+                        "Integracja cienia i uznanie ambiwalencji własnych cech",
+                        "Całkowite wyeliminowanie nieświadomości poprzez racjonalizację",
+                        "Konfrontacja z archetypowymi obrazami (np. anima/animus) w procesie rozwoju Jaźni",
+                        "Redukcja osobowości do trzech wymiarów biologicznych",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Indywiduacja u Junga to proces stawania się bardziej całościowym, a nie „oczyszczonym” z nieświadomości. Integracja cienia oznacza przyjęcie wypieranych aspektów siebie i zmniejszenie projekcji. Praca z anima/animus i innymi archetypami porządkuje relację ego z Jaźnią jako centrum całości psychicznej.",
+                    category: "Jung - indywiduacja",
+                },
+                {
+                    question:
+                        "Które rozróżnienie NAJLEPIEJ oddaje różnicę między nieświadomością osobistą a zbiorową u Junga?",
+                    options: [
+                        "Osobista zawiera treści wynikłe z indywidualnej historii i wyparcia, a zbiorowa – uniwersalne formy (archetypy) niezależne od biografii",
+                        "Osobista dotyczy wyłącznie snów, a zbiorowa wyłącznie fantazji na jawie",
+                        "Zbiorowa jest tożsama z superego, a osobista z id",
+                        "Osobista jest w pełni dostępna introspekcji, a zbiorowa zawsze świadoma",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Nieświadomość osobista u Junga obejmuje treści nabyte: zapomniane, wyparte, związane z kompleksem i doświadczeniem. Nieświadomość zbiorowa to głębszy poziom zawierający archetypy – wrodzone dyspozycje do tworzenia pewnych obrazów i motywów. To rozróżnienie tłumaczy, dlaczego podobne symbole pojawiają się w kulturach niezależnie od kontaktu historycznego.",
+                    category: "Jung - nieświadomość zbiorowa",
+                },
+                {
+                    question:
+                        "Która para terminów NAJLEPIEJ odpowiada podstawowym postawom (attitudes) u Junga w sensie typologicznym?",
+                    options: [
+                        "Introwersja i ekstrawersja",
+                        "Neurotyczność i psychotyczność",
+                        "Otwartość i sumienność",
+                        "Identyfikacja i introjekcja",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Jung wyróżniał dwie postawy: introwersyjną (ukierunkowanie energii psychicznej do wewnątrz) i ekstrawersyjną (na obiekt i świat zewnętrzny). Dopiero na tym tle opisywał funkcje psychiczne (myślenie, uczucie, percepcja, intuicja) i typy złożone. Mylenie tego z wymiarami PEN czy Wielką Piątką zaciera różnice między tradycją analityczną a psychometrią cech.",
+                    category: "Jung - introwersja i ekstrawersja",
+                },
+                {
+                    question:
+                        "Które stwierdzenia dotyczące Eriksona są trafne (zaznacz 2 poprawne)?",
+                    options: [
+                        "Model obejmuje osiem kryzysów psychospołecznych w cyklu życia",
+                        "Rozwój kończy się na adolescencji, bo dalej dominuje stabilizacja cech",
+                        "Centralny jest konflikt tożsamość vs pomieszanie ról w okresie dorastania",
+                        "Erikson opisywał wyłącznie popędy seksualne jako motor rozwoju",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Erikson rozszerzył perspektywę rozwoju na całe życie, opisując osiem etapów i kryzysów psychospołecznych. W adolescencji kluczowy jest konflikt tożsamość vs pomieszanie ról, warunkujący późniejszą intymność i generatywność. Nie redukował motywacji do popędów seksualnych, akcentując relacje społeczne i zadania rozwojowe.",
+                    category: "Erikson - stadia psychospołeczne",
+                },
+                {
+                    question:
+                        "W ujęciu Adlera, które wyjaśnienie NAJLEPIEJ pasuje do kompensacji i „dążenia do mocy”?",
+                    options: [
+                        "Kompensacja jest odpowiedzią na poczucie niższości i może prowadzić do konstruktywnego dążenia do doskonałości",
+                        "Kompensacja oznacza wyparcie popędów seksualnych i ich sublimację w sztuce",
+                        "Dążenie do mocy jest zawsze przejawem psychozy i rozpadu ego",
+                        "Poczucie niższości nie ma znaczenia, bo osobowość jest zdeterminowana genetycznie",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Adler zakładał, że doświadczenie niższości (realne lub subiektywne) uruchamia kompensację i dążenie do doskonałości. Może to mieć formę adaptacyjną (rozwój kompetencji) albo neurotyczną (nadmierna dominacja). Kluczowy jest też „interes społeczny” jako wskaźnik zdrowia psychicznego w jego psychologii indywidualnej.",
+                    category: "Adler - psychologia indywidualna",
+                },
+                {
+                    question:
+                        "W teorii Sullivana, które pojęcie NAJLEPIEJ opisuje organizowanie doświadczenia Ja w relacjach interpersonalnych?",
+                    options: [
+                        "System Ja (self-system) kształtowany przez redukcję lęku w relacjach",
+                        "Ego jako mediator między id a superego w konflikcie popędowym",
+                        "Archetyp Jaźni jako centrum psyche",
+                        "Cechy kardynalne jako rdzeń dyspozycji",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Sullivan widział osobowość jako wytwór relacji interpersonalnych, a system Ja jako konfigurację sposobów redukcji lęku i utrzymania bezpieczeństwa. To system ukształtowany przez reakcje znaczących innych, szczególnie w kontekście aprobaty i dezaprobaty. W przeciwieństwie do Freuda nacisk pada na dynamikę relacyjną, a nie konflikt popędowy.",
+                    category: "Sullivan - koncepcja interpersonalna",
+                },
+                {
+                    question:
+                        "W koncepcji Karen Horney, które dwa elementy są najbardziej centralne dla genezy neurotycznych trendów (zaznacz 2 poprawne)?",
+                    options: [
+                        "Lęk podstawowy wynikający z wczesnej niepewności i braku ciepła",
+                        "Rozwiązanie konfliktu Edypa jako jedyny warunek zdrowia",
+                        "Tyrania powinności (wewnętrzne przymusy „muszę/powinienem”)",
+                        "Stabilny, wysoki poziom pobudzenia ARAS jako źródło neurozy",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Horney zakładała, że niespójne, odrzucające lub zagrażające środowisko tworzy lęk podstawowy, który napędza strategie radzenia sobie. „Tyrania powinności” opisuje wewnętrzne przymusy i ideały Ja, które podtrzymują chroniczne napięcie i poczucie winy. Jej model nie wymaga redukcji do Edypa ani do prostego wskaźnika neurofizjologicznego.",
+                    category: "Horney - lęk podstawowy i tyrania powinności",
+                },
+                {
+                    question:
+                        "Który opis NAJLEPIEJ ilustruje „pozycję paranoidalno-schizoidalną” u Melanie Klein?",
+                    options: [
+                        "Dominacja rozszczepienia i lęków prześladowczych, z podziałem obiektu na całkowicie dobry i całkowicie zły",
+                        "Stabilna integracja dobrych i złych aspektów obiektu z przewagą poczucia winy reparacyjnej",
+                        "Wyłącznie dojrzałe obrony, takie jak sublimacja i humor",
+                        "Zależność od racjonalizacji i izolacji afektu jako głównych mechanizmów",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "W pozycji paranoidalno-schizoidalnej niemowlę doświadcza obiektu w trybie częściowym i spolaryzowanym. Rozszczepienie chroni przed ambiwalencją, a lęki prześladowcze wiążą się z projekcją agresji na „zły” obiekt. To etap wcześniejszy niż pozycja depresyjna, gdzie pojawia się integracja i troska o obiekt.",
+                    category: "Klein - pozycja paranoidalno-schizoidalna",
+                },
+                {
+                    question:
+                        "Które mechanizmy obronne są typowo wiązane z pozycją depresyjną u Klein (zaznacz 2 poprawne)?",
+                    options: [
+                        "Reparacja i dążenie do naprawienia wyobrażonej szkody w relacji z obiektem",
+                        "Rozszczepienie jako dominujący, stały mechanizm organizujący doświadczenie",
+                        "Poczucie winy i troska o obiekt jako konsekwencja integracji dobrego i złego",
+                        "Całkowite zanegowanie zależności od obiektu jako stała obrona",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Pozycja depresyjna wiąże się z integracją reprezentacji obiektu: ten sam obiekt bywa i dobry, i frustrujący. Skutkiem jest ambiwalencja oraz poczucie winy i troski, a także tendencje reparacyjne. Rozszczepienie nie znika całkowicie, ale przestaje dominować jako główna organizacja życia psychicznego.",
+                    category: "Klein - pozycja depresyjna",
+                },
+                {
+                    question:
+                        "W psychologii self Kohuta, „optymalne frustracje” oznaczają:",
+                    options: [
+                        "Dozowanie niewielkich, rozwojowo adekwatnych rozczarowań, które sprzyjają internalizacji funkcji selfobject",
+                        "Celowe upokarzanie dziecka, aby wytworzyć silne superego",
+                        "Unikanie frustracji w całości, bo każda prowadzi do narcyzmu",
+                        "Stałą deprywację mirroring w celu wzmocnienia autonomii",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Kohut podkreślał, że self rozwija się dzięki relacji z selfobject, ale wymaga też stopniowego znoszenia niedoskonałości opiekuna. „Optymalne frustracje” to małe rozczarowania, które nie przekraczają tolerancji dziecka i prowadzą do transmutującej internalizacji. W efekcie jednostka nabywa własne funkcje regulacji samooceny i afektu.",
+                    category: "Kohut - optymalne frustracje",
+                },
+                {
+                    question:
+                        "Które stwierdzenia są trafne dla Kernbergowskiej „organizacji borderline” (zaznacz 2 poprawne)?",
+                    options: [
+                        "Dyfuzja tożsamości jako brak integracji reprezentacji self i obiektu",
+                        "Stabilne testowanie rzeczywistości na poziomie psychotycznym z urojeniami jako norma",
+                        "Dominacja prymitywnych mechanizmów obronnych, zwłaszcza rozszczepienia",
+                        "Brak jakichkolwiek relacji z obiektem i całkowita izolacja społeczna jako kryterium konieczne",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "U Kernberga organizacja borderline charakteryzuje się dyfuzją tożsamości oraz przewagą obron prymitywnych (rozszczepienie, idealizacja/dewaluacja). Testowanie rzeczywistości bywa zasadniczo zachowane (w przeciwieństwie do organizacji psychotycznej), choć może się chwiać pod stresem. Model Kernberga opisuje strukturę, a nie pojedynczy styl życia czy izolację jako warunek konieczny.",
+                    category: "Kernberg - organizacja borderline",
+                },
+                {
+                    question:
+                        "Głównym celem TFP (Transference-Focused Psychotherapy) Kernberga jest przede wszystkim:",
+                    options: [
+                        "Integracja rozszczepionych reprezentacji self i obiektu poprzez pracę na relacji przeniesieniowej",
+                        "Eliminacja wszystkich mechanizmów obronnych przez trening uważności",
+                        "Nauka technik relaksacyjnych w celu obniżenia pobudzenia autonomicznego",
+                        "Wzmocnienie wyparcia, aby ograniczyć wgląd i zmniejszyć cierpienie",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "TFP koncentruje się na tym, co ujawnia się w przeniesieniu: spolaryzowane diady relacyjne. Poprzez interpretacje i utrzymywanie ram terapii pacjent stopniowo integruje „dobre” i „złe” reprezentacje, co wzmacnia spójność tożsamości. Celem nie jest likwidacja obron jako takich, tylko przejście od prymitywnych do bardziej dojrzałych sposobów regulacji relacji i afektu.",
+                    category: "Kernberg - TFP",
+                },
+                {
+                    question:
+                        "W ujęciu Allporta, która konfiguracja cech NAJLEPIEJ odpowiada cechom kardynalnym?",
+                    options: [
+                        "Rzadkie, dominujące dyspozycje przenikające większość zachowań i nadające życiu jednostki rozpoznawalny ton",
+                        "Szerokie wymiary czynnikowe uzyskane wyłącznie analizą czynnikową w dużych próbach",
+                        "Zmienna sytuacyjnie reaktywność emocjonalna mierzona ESM",
+                        "Kategorie diagnostyczne oparte o kryteria behawioralne",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Allport wyróżniał cechy kardynalne jako wyjątkowo dominujące, często spotykane u nielicznych osób. Są tak wszechobecne, że organizują styl życia (np. skrajna ambicja, filantropia) i ułatwiają opis idiograficzny. To odróżnia je od cech centralnych (częstszych) i drugorzędnych (bardziej specyficznych sytuacyjnie).",
+                    category: "Allport - typy cech",
+                },
+                {
+                    question:
+                        "Które stwierdzenia o Cattellu są poprawne (zaznacz 2 poprawne)?",
+                    options: [
+                        "Wykorzystywał analizę czynnikową do wyodrębniania struktur cech",
+                        "16PF od początku było narzędziem stricte klinicznym do diagnozy psychoz",
+                        "Rozróżniał m.in. dane L, Q i T jako źródła informacji o osobowości",
+                        "Odrzucał pomiar ilościowy i postulował wyłącznie wywiad jakościowy",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Cattell był kluczową postacią podejścia psychometrycznego: stosował analizę czynnikową do wydobywania wymiarów cech. Wskazywał też różne źródła danych: Life records (L), Questionnaire (Q) i Test (T), by ograniczać bias pojedynczej metody. 16PF jest kwestionariuszem cech, nie narzędziem wyłącznie do diagnozowania psychoz.",
+                    category: "Cattell - 16PF i analiza czynnikowa",
+                },
+                {
+                    question:
+                        "W modelu PEN Eysencka, psychotyczność jest NAJLEPIEJ rozumiana jako:",
+                    options: [
+                        "Wymiar obejmujący m.in. chłód, impulsywność i nonkonformizm, niebędący równoznaczny z psychozą kliniczną",
+                        "Diagnoza schizofrenii oparta na objawach wytwórczych",
+                        "Synonim neurotyczności i lękliwości",
+                        "Zmienna wyłącznie sytuacyjna, bez komponentu temperamentalnego",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Eysenck traktował psychotyczność jako wymiar osobowości, obejmujący m.in. twardość, impulsywność i tendencje antyspołeczne. To nie jest to samo co zaburzenie psychotyczne, choć wysokie wyniki mogą wiązać się z ryzykiem pewnych problemów klinicznych. Mylenie wymiaru z diagnozą prowadzi do błędnej interpretacji wyników testów PEN.",
+                    category: "Eysenck - psychotyczność",
+                },
+                {
+                    question:
+                        "Które dwa stwierdzenia są zgodne z klasyczną interpretacją biologicznych podstaw PEN (zaznacz 2 poprawne)?",
+                    options: [
+                        "Ekstrawersja wiązana była z poziomem pobudzenia korowego regulowanego przez ARAS",
+                        "Neurotyczność wiązana była z reaktywnością układu limbicznego/autonomicznego",
+                        "Psychotyczność miała być wyłącznie skutkiem stylu wychowania, bez komponentu biologicznego",
+                        "Ekstrawersja oznacza zawsze wyższy poziom lęku i unikania",
+                    ],
+                    correct: [0, 1],
+                    explanation:
+                        "Eysenck łączył ekstrawersję z różnicami w pobudzeniu korowym i poszukiwaniem stymulacji. Neurotyczność wiązał z reaktywnością układu limbicznego i łatwością aktywacji reakcji stresowej. Te interpretacje były hipotezami integrującymi temperament z neurofizjologią, choć współczesne dane są bardziej zniuansowane niż pierwotny model.",
+                    category: "Eysenck - biologiczne podstawy",
+                },
+                {
+                    question:
+                        "W Wielkiej Piątce, które stwierdzenie NAJLEPIEJ oddaje problem „poziomu opisu” cech?",
+                    options: [
+                        "Wymiary OCEAN są szerokimi domenami, a ich facety (np. w NEO-PI-R) doprecyzowują bardziej specyficzne tendencje",
+                        "OCEAN opisuje wyłącznie motywy nieświadome i nie ma odpowiedników behawioralnych",
+                        "Facety są mniej stabilne niż stany, dlatego nie mają wartości predykcyjnej",
+                        "Wielka Piątka to typologia, a nie model wymiarowy",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "OCEAN to domeny o wysokiej ogólności, użyteczne do porównań między badaniami i kulturami. NEO-PI-R rozwija je w facety, które zwiększają precyzję predykcji (np. różne aspekty neurotyczności). Problem poziomu polega na tym, że zbyt szerokie konstrukty mogą maskować ważne różnice, a zbyt wąskie tracą stabilność i uogólnialność.",
+                    category: "Wielka Piątka - facety i poziom opisu",
+                },
+                {
+                    question:
+                        "Które dwie cechy należą do modelu HEXACO (zaznacz 2 poprawne)?",
+                    options: [
+                        "Uczciwość–Pokora (Honesty-Humility)",
+                        "Psychotyczność",
+                        "Emocjonalność",
+                        "Wrogość jako osobny, niezależny wymiar rdzeniowy",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "HEXACO rozszerza klasyczną Piątkę o wymiar Uczciwość–Pokora, ważny dla zachowań prospołecznych i unikania eksploatacji innych. Zawiera też Emocjonalność, częściowo pokrewną neurotyczności, lecz o innej treści (np. lęk, zależność, empatia). Psychotyczność należy do PEN, a „wrogość” w HEXACO zwykle jest facetem lub składnikiem innych domen, nie osobną domeną rdzeniową.",
+                    category: "HEXACO - struktura modelu",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ opisuje relację między Ciemną Triadą a Ciemną Tetradą?",
+                    options: [
+                        "Tetrada obejmuje Triadę oraz dodatkowo sadyzm jako czwarty komponent",
+                        "Triada obejmuje Tetradę, ale bez makiawelizmu",
+                        "Tetrada to wyłącznie synonim Triady w literaturze europejskiej",
+                        "Triada dotyczy tylko cech klinicznych, a Tetrada tylko cech normalnych",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Ciemna Triada klasycznie obejmuje makiawelizm, narcyzm i psychopatię. W części badań rozszerza się ją o sadyzm, tworząc Ciemną Tetradę, aby lepiej uchwycić komponent przyjemności z krzywdzenia. Różnica jest koncepcyjna: dodatek sadyzmu ma wyjaśniać zachowania agresywne, których Triada nie opisuje dostatecznie precyzyjnie.",
+                    category: "Dark Triad/Tetrad - porównanie",
+                },
+                {
+                    question:
+                        "W podejściu Rogersa, „warunki wartości” prowadzą przede wszystkim do:",
+                    options: [
+                        "Rozbieżności między doświadczeniem a self, nasilając niekongruencję i obrony percepcyjne",
+                        "Rozwoju stabilnego superego i redukcji konfliktu popędowego",
+                        "Wzrostu psychotyczności w sensie Eysencka",
+                        "Zwiększenia inteligencji płynnej poprzez trening metapoznawczy",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Warunki wartości to komunikaty, że akceptacja zależy od spełniania wymagań, co skłania do selektywnego przyjmowania doświadczeń zgodnych z „powinienem”. W efekcie self oddala się od bieżącego doświadczenia, powstaje niekongruencja i podatność na lęk. Terapia skoncentrowana na osobie ma to zmniejszać poprzez bezwarunkową akceptację, empatię i autentyczność terapeuty.",
+                    category: "Rogers - warunki wartości i kongruencja",
+                },
+                {
+                    question:
+                        "Które dwa elementy są najbardziej typowe dla samorealizacji u Maslowa (zaznacz 2 poprawne)?",
+                    options: [
+                        "Doświadczenia szczytowe i poczucie pełniejszego kontaktu z rzeczywistością",
+                        "Stała zależność od aprobaty zewnętrznej jako rdzeń motywacji",
+                        "Autonomia i orientacja na wzrost (B-motywy) bardziej niż deficyt",
+                        "Dominacja zachowań przystosowawczych wyłącznie dla unikania kary",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Maslow opisywał samorealizację jako orientację na wzrost i urzeczywistnianie potencjału, a nie wyłącznie redukcję deficytu. Wskazywał też na doświadczenia szczytowe, które wzmacniają sens i integrację wartości. Zależność od aprobaty i unikanie kary to raczej motywy deficytowe, typowe dla niższych poziomów potrzeb.",
+                    category: "Maslow - samorealizacja",
+                },
+                {
+                    question:
+                        "W logoterapii Frankla, „pustka egzystencjalna” NAJLEPIEJ oznacza:",
+                    options: [
+                        "Chroniczne poczucie braku sensu i celu, często maskowane konformizmem lub dążeniem do przyjemności/władzy",
+                        "Powrót wypartego materiału seksualnego w postaci objawów somatycznych",
+                        "Stałą aktywację ciała migdałowatego niezależnie od kontekstu",
+                        "Deficyt cechy sumienności mierzony NEO-PI-R",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Frankl opisywał pustkę egzystencjalną jako doświadczenie bezsensu, które rodzi „noogeniczne” cierpienie. Jednostka może ją kompensować hiperaktywnością, konsumpcją lub konformizmem, ale nie rozwiązuje to problemu znaczenia. Logoterapia kieruje uwagę na odkrywanie sensu poprzez wartości, postawę wobec cierpienia i odpowiedzialność.",
+                    category: "Frankl - logoterapia",
+                },
+                {
+                    question:
+                        "W podejściu Gestalt Perlsa, która interpretacja jest NAJZGODNIEJSZA z pojęciem „domykania figur”?",
+                    options: [
+                        "Niedomknięte sprawy utrzymują napięcie w polu organizm-środowisko i dążą do ukończenia w świadomości i działaniu",
+                        "Domykanie figur polega na wzmacnianiu wyparcia, by utrzymać homeostazę",
+                        "Figura jest zawsze tożsama z superego, a tło z id",
+                        "Domykanie figur dotyczy wyłącznie percepcji wzrokowej, nie relacji",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Gestalt traktuje doświadczenie jako organizowane w figurę i tło, gdzie figura to najbardziej znacząca potrzeba lub temat w danym momencie. „Niedomknięte sprawy” mogą wracać jako napięcie i przerywać kontakt, dopóki nie zostaną przeżyte i zintegrowane. To pojęcie ma zastosowanie także w relacjach, nie tylko w percepcji bodźców.",
+                    category: "Perls - Gestalt",
+                },
+                {
+                    question:
+                        "W personologii Murraya, które stwierdzenia są poprawne (zaznacz 2 poprawne)?",
+                    options: [
+                        "„Naciski” (press) odnoszą się do właściwości sytuacji/środowiska, które wywołują lub hamują potrzeby",
+                        "„Potrzeby psychogenne” są identyczne z cechami Wielkiej Piątki",
+                        "„Thema” to powtarzalny wzorzec potrzeba–nacisk organizujący narracje i zachowanie",
+                        "TAT jest narzędziem wyłącznie do pomiaru inteligencji werbalnej",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Murray rozumiał zachowanie jako wynik interakcji potrzeb i nacisków środowiskowych. „Thema” opisuje typowy scenariusz, w którym określone potrzeby są aktywizowane przez określone naciski, co porządkuje opowieści i działania. TAT służy do badania tematów motywacyjnych i dynamiki narracyjnej, a nie do pomiaru inteligencji jako takiej.",
+                    category: "Murray - potrzeby, press i thema",
+                },
+                {
+                    question:
+                        "W analizie transakcyjnej Berne’a, transakcja skrzyżowana oznacza przede wszystkim:",
+                    options: [
+                        "Odpowiedź z innego stanu ego niż ten, do którego kierowana była komunikacja, co zwykle przerywa płynność interakcji",
+                        "Wymianę bodźców wyłącznie między dwoma Dorosłymi, bez komponentu emocjonalnego",
+                        "Jednoczesne ujawnienie przeniesienia i przeciwprzeniesienia w terapii psychodynamicznej",
+                        "Mechanizm obronny polegający na projekcji nieakceptowanych impulsów",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "W transakcji skrzyżowanej komunikat jest adresowany do jednego stanu ego (np. Dorosły), a odpowiedź pochodzi z innego (np. Rodzic krytyczny). To często prowadzi do napięcia i eskalacji, bo rozmówcy „mijają się” co do poziomu interakcji. Analiza takich wzorców pomaga zrozumieć gry psychologiczne i scenariusze relacyjne.",
+                    category: "Berne - transakcje skrzyżowane",
+                },
+                {
+                    question:
+                        "Które dwa elementy są centralne dla „gry psychologicznej” w AT (zaznacz 2 poprawne)?",
+                    options: [
+                        "Ukryta transakcja z drugą linią znaczeniową (poziomem psychologicznym)",
+                        "Brak jakichkolwiek zysków wtórnych dla uczestników",
+                        "Przewidywalna sekwencja prowadząca do „wypłaty” (payoff) i wzmocnienia scenariusza",
+                        "Losowa wymiana informacji bez powtarzalności",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Berne definiował gry jako powtarzalne sekwencje interakcji, które mają jawny i ukryty poziom znaczenia. Ich kluczową cechą jest „wypłata”: emocjonalny lub relacyjny zysk, który paradoksalnie utrwala dysfunkcyjny scenariusz. Brak zysku wtórnego i przypadkowość byłyby sprzeczne z definicją gry.",
+                    category: "Berne - gry psychologiczne",
+                },
+                {
+                    question:
+                        "Który opis NAJLEPIEJ oddaje pojęcie G×E w badaniach osobowości?",
+                    options: [
+                        "Wpływ środowiska na cechę zależy od genotypu, a wpływ genotypu może ujawniać się różnie w różnych środowiskach",
+                        "Geny i środowisko sumują się liniowo, a ich interakcja jest błędem pomiaru",
+                        "G×E oznacza wyłącznie wpływ genów na wybór środowiska (korelacja rGE)",
+                        "G×E jest równoznaczne z dziedzicznością h²",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Interakcja geny–środowisko oznacza, że efekt jednego czynnika zależy od poziomu drugiego. Ten sam stresor może prowadzić do różnych rezultatów w zależności od wrażliwości biologicznej, a ten sam genotyp może inaczej się ujawniać w odmiennych kontekstach. To odróżnia G×E od korelacji rGE i od samej dziedziczności, która nie opisuje mechanizmu interakcyjnego.",
+                    category: "Biologiczne podstawy - interakcje G×E",
+                },
+                {
+                    question:
+                        "Które dwa systemy neuronalne są najczęściej łączone z różnicami w reaktywności emocjonalnej i kontroli poznawczej (zaznacz 2 poprawne)?",
+                    options: [
+                        "Ciało migdałowate i sieci limbiczne",
+                        "Móżdżek jako jedyny regulator osobowości",
+                        "Kora przedczołowa (zwłaszcza obszary kontrolne) i funkcje wykonawcze",
+                        "Rdzeń kręgowy jako główne centrum samoregulacji celów",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Ciało migdałowate jest kluczowe dla wykrywania znaczenia emocjonalnego i szybkich reakcji na zagrożenie, co wiąże się m.in. z neurotycznością i lękliwością. Kora przedczołowa wspiera kontrolę poznawczą, hamowanie i planowanie, wpływając na samoregulację i impulsywność. Móżdżek i rdzeń kręgowy uczestniczą w wielu funkcjach, ale nie są „jedynymi” centrami osobowości ani kontroli celów.",
+                    category: "Neuronauka osobowości - emocje i kontrola",
+                },
+                {
+                    question:
+                        "Znaczenie przypadku Phineasa Gage’a dla psychologii osobowości polega przede wszystkim na tym, że:",
+                    options: [
+                        "Zasugerował rolę płatów czołowych w regulacji zachowania społecznego, planowaniu i hamowaniu impulsów",
+                        "Udowodnił, że osobowość jest całkowicie niezależna od mózgu",
+                        "Pokazał, że neurotyczność jest wyłącznie wynikiem konfliktu Edypalnego",
+                        "Potwierdził, że cechy kardynalne są w pełni dziedziczne i niezmienne",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Opis zmian po urazie Gage’a wskazał, że uszkodzenia obszarów czołowych mogą istotnie zmieniać zachowanie społeczne, przewidywanie konsekwencji i kontrolę impulsów. To stało się klasycznym argumentem za neurobiologicznym współtworzeniem funkcji osobowościowych. Choć współczesne analizy są bardziej ostrożne, przypadek pozostaje ważnym punktem historii neuropsychologii.",
+                    category: "Biologiczne podstawy - Phineas Gage",
+                },
+                {
+                    question:
+                        "W społeczno-poznawczej teorii Bandury, „sprawstwo” (agency) jest NAJLEPIEJ rozumiane jako:",
+                    options: [
+                        "Zdolność do intencjonalnego wpływania na własne funkcjonowanie poprzez cele, autorefleksję i samoregulację",
+                        "Stały poziom pobudzenia fizjologicznego determinujący zachowanie",
+                        "Wyłącznie nieświadomy konflikt między id i superego",
+                        "Czysta suma nawyków wzmacnianych w dzieciństwie",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Bandura akcentował, że ludzie są aktywnymi agentami: wyznaczają cele, monitorują postępy i modyfikują strategie. To wiąże się z samoskutecznością jako przekonaniem o możliwości wykonania działania. Sprawstwo nie redukuje się ani do pobudzenia biologicznego, ani do konfliktu popędowego, ani do pasywnego uczenia się nawyków.",
+                    category: "Bandura - sprawstwo i samoregulacja",
+                },
+                {
+                    question:
+                        "W modelu CAPS Mischela, spójność zachowania wynika głównie z:",
+                    options: [
+                        "Względnie stabilnych wzorców „jeśli–to” (if…then) łączących sytuacje z reakcjami w systemie poznawczo-afektywnym",
+                        "Stałych typów osobowości całkowicie niezależnych od kontekstu",
+                        "Jednego czynnika ogólnego osobowości determinującego wszystkie zachowania",
+                        "Wyłącznie poziomu neurotyczności mierzonego samoopisem",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "CAPS zakłada, że jednostka ma charakterystyczną sygnaturę zachowania: w pewnych sytuacjach reaguje w określony sposób, co tworzy stabilny wzorzec warunkowy. Spójność jest więc „względna” i ujawnia się w strukturze sytuacja→reakcja, a nie w identycznym zachowaniu wszędzie. To odpowiada na krytykę niskich korelacji zachowania między sytuacjami w debacie osoba–sytuacja.",
+                    category: "Mischel - CAPS i sygnatury if–then",
+                },
+                {
+                    question:
+                        "Które metody są typowe dla ESM i badań dynamiki osobowości (zaznacz 2 poprawne)?",
+                    options: [
+                        "Wielokrotne pomiary w naturalnym środowisku w krótkich odstępach czasu",
+                        "Jednorazowy test laboratoryjny i uśrednienie wyniku jako jedyny wskaźnik",
+                        "Modelowanie zmienności wewnątrzosobniczej i współzmienności stanów",
+                        "Wyłącznie ocena kliniczna bez żadnych danych liczbowych",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "ESM (Experience Sampling Method) zbiera dane „w biegu”, ograniczając błąd pamięci i zwiększając trafność ekologiczną. Pozwala analizować wariancję wewnątrzosobniczą, dynamikę afektu i konteksty wyzwalające zachowanie. Dzięki temu osobowość można badać nie tylko jako średni poziom cech, ale też jako wzorzec fluktuacji i reaktywności.",
+                    category: "Nowe kierunki - ESM i dynamika osobowości",
+                },
+                {
+                    question:
+                        "W badaniach nad osobowością i zdrowiem, które stwierdzenie jest NAJLEPSZE metodologicznie?",
+                    options: [
+                        "Związki cech ze zdrowiem mogą wynikać zarówno z zachowań zdrowotnych, jak i mechanizmów stresowych oraz selekcji środowisk",
+                        "Jeśli cecha koreluje ze zdrowiem, to jest przyczyną biologiczną choroby wprost",
+                        "Wystarczy samoopis zdrowia, bo obiektywne wskaźniki zawsze wprowadzają szum",
+                        "Korelacje w przekroju poprzecznym dowodzą kierunku przyczynowego",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Relacje osobowość–zdrowie są zwykle wielościeżkowe: cechy wpływają na nawyki, ekspozycję na stres, sieci wsparcia i reakcje fizjologiczne. To nie oznacza prostego determinizmu biologicznego ani automatycznej przyczynowości. Solidne wnioski wymagają danych podłużnych, wielometodowych oraz kontroli czynników zakłócających i selekcji.",
+                    category: "Osobowość a zdrowie - metodologia",
+                },
+                {
+                    question:
+                        "Które dwa mechanizmy najczęściej wiąże się z biasami uwagowymi w kontekście lęku (zaznacz 2 poprawne)?",
+                    options: [
+                        "Preferencyjne kierowanie uwagi na bodźce zagrażające",
+                        "Trwałe ignorowanie wszystkich bodźców emocjonalnych",
+                        "Trudność w odłączaniu uwagi od bodźców zagrażających (disengagement)",
+                        "Całkowity brak reakcji autonomicznej na zagrożenie",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "W modelach poznawczych lęku często wyróżnia się ułatwione wykrywanie zagrożenia oraz trudności z odłączeniem uwagi od bodźców zagrażających. Te mechanizmy mogą podtrzymywać ruminacje i nadmierną czujność. Nie zakłada się globalnego ignorowania emocji ani braku reakcji autonomicznej — przeciwnie, częsta jest hiperreaktywność.",
+                    category: "Nowe kierunki - biasy uwagowe",
+                },
+                {
+                    question:
+                        "W kontekście samoregulacji, które stwierdzenie NAJLEPIEJ opisuje różnicę między kontrolą hamowania a aktualizacją pamięci roboczej?",
+                    options: [
+                        "Hamowanie dotyczy powstrzymywania reakcji dominującej, a aktualizacja – zastępowania treści w pamięci roboczej bardziej relewantnymi informacjami",
+                        "Hamowanie i aktualizacja to synonimy odnoszące się do tej samej funkcji",
+                        "Hamowanie dotyczy wyłącznie emocji, a aktualizacja wyłącznie motywów nieświadomych",
+                        "Aktualizacja polega na utrwalaniu treści bez zmiany, a hamowanie na zwiększaniu pobudzenia",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Funkcje wykonawcze obejmują różne procesy: hamowanie odpowiada za zatrzymanie impulsu lub reakcji nawykowej. Aktualizacja pamięci roboczej dotyczy dynamicznego zarządzania informacją — usuwania nieaktualnej i wprowadzania nowej. Te rozróżnienia są ważne w badaniach samokontroli i różnic indywidualnych w impulsywności.",
+                    category: "Funkcje wykonawcze - samoregulacja",
+                },
+                {
+                    question:
+                        "Które dwa twierdzenia najlepiej oddają klasyczną krytykę „globalnych cech” w debacie osoba–sytuacja (zaznacz 2 poprawne)?",
+                    options: [
+                        "Korelacje zachowania między sytuacjami bywały niskie, co sugerowało rolę specyficzności kontekstu",
+                        "Jeśli cechy istnieją, to zachowanie musi być identyczne w każdej sytuacji",
+                        "Stałe „sygnatury” if–then mogą ujawniać spójność w strukturze reakcji, mimo zmienności poziomu zachowania",
+                        "Koncepcja cech została całkowicie odrzucona i nie ma żadnej wartości predykcyjnej",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Dane wskazywały, że pojedyncze zachowania mogą słabo korelować między sytuacjami, co podważało naiwny obraz stałej spójności. Jednocześnie podejścia takie jak CAPS pokazały, że spójność może dotyczyć wzorców sytuacja→reakcja, a nie stałego poziomu zachowania. Nie wynika z tego, że cechy są bezwartościowe, lecz że trzeba precyzyjniej definiować, co znaczy „spójność”.",
+                    category: "Mischel/Bandura - debata osoba–sytuacja",
+                },
+                {
+                    question:
+                        "W modelu dynamicznym Freuda, konflikt psychiczny jest NAJLEPIEJ rozumiany jako:",
+                    options: [
+                        "Starcie sił popędowych, obron i zakazów, którego kompromisowym produktem mogą być symptomy",
+                        "Wyłącznie świadomy dylemat moralny rozwiązywany logicznie",
+                        "Efekt pojedynczego bodźca traumatycznego bez udziału obron",
+                        "Różnica między ekstrawersją i introwersją",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Model dynamiczny zakłada wewnętrzne „siły” o przeciwnych kierunkach: popędy, normy, lęk i obrony. Symptomy mogą być kompromisem, który częściowo zaspokaja popęd, a częściowo utrzymuje zakaz i redukuje lęk. To ujęcie odróżnia psychoanalizę od modeli, które widzą problem wyłącznie jako świadomą decyzję.",
+                    category: "Freud - model dynamiczny",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ odróżnia mechanizmy pierwotne od wtórnych u Freuda?",
+                    options: [
+                        "Pierwotne są bardziej archaiczne, oparte na kondensacji/przemieszczeniu i natychmiastowej gratyfikacji, a wtórne są bardziej logiczne i podporządkowane rzeczywistości",
+                        "Pierwotne występują wyłącznie u dorosłych, a wtórne wyłącznie u dzieci",
+                        "Pierwotne są zawsze świadome, a wtórne zawsze nieświadome",
+                        "Wtórne są charakterystyczne dla id, a pierwotne dla superego",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Procesy pierwotne opisują funkcjonowanie id: dążenie do natychmiastowej gratyfikacji i symboliczne przekształcenia treści (np. w marzeniach sennych). Procesy wtórne wiążą się z ego i zasadą rzeczywistości: planowaniem, testowaniem realności i logiką. To rozróżnienie organizuje psychoanalityczne rozumienie fantazji, snu i objawu.",
+                    category: "Freud - procesy pierwotne i wtórne",
+                },
+                {
+                    question:
+                        "Które dwa pojęcia są najbardziej typowe dla Fromma (zaznacz 2 poprawne)?",
+                    options: [
+                        "Ucieczka od wolności i mechanizmy unikania autonomii",
+                        "Archetypy i nieświadomość zbiorowa",
+                        "Orientacje charakteru (np. receptywna, eksploatatorska) w kontekście społeczno-ekonomicznym",
+                        "Pobudzenie ARAS jako fundament ekstrawersji",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Fromm łączył psychoanalizę z analizą społeczną, opisując lęk przed wolnością i strategie „ucieczki” (autorytaryzm, destrukcyjność, automatyczny konformizm). Opisywał też orientacje charakteru kształtowane przez warunki społeczno-ekonomiczne. Archetypy są jungowskie, a ARAS to element biologicznych interpretacji Eysencka, nie Fromma.",
+                    category: "Fromm - psychoanaliza społeczna",
+                },
+                {
+                    question:
+                        "W koncepcji Horney, „ruch ku ludziom”, „ruch przeciw ludziom” i „ruch od ludzi” to przede wszystkim:",
+                    options: [
+                        "Neurotyczne trendy radzenia sobie z lękiem podstawowym poprzez zależność, dominację lub wycofanie",
+                        "Trzy fazy stadiów psychoseksualnych",
+                        "Typy temperamentu zależne wyłącznie od serotoniny",
+                        "Kategorie diagnoz DSM dotyczące zaburzeń osobowości",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Horney opisywała trzy podstawowe strategie interpersonalne, które mogą stać się sztywne i neurotyczne. „Ku ludziom” wiąże się z uległością, „przeciw ludziom” z agresją i kontrolą, a „od ludzi” z wycofaniem. To podejście tłumaczy wzorce relacyjne bez redukcji do konfliktu Edypalnego.",
+                    category: "Horney - neurotyczne trendy",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ opisuje „identyfikację projekcyjną” w tradycji kleinowskiej?",
+                    options: [
+                        "Projekcję części self do obiektu z równoczesną próbą kontrolowania obiektu tak, aby „niósł” te części",
+                        "Prosty mechanizm zaprzeczania faktom zewnętrznym",
+                        "Świadome naśladowanie autorytetu w celu internalizacji norm",
+                        "Przesunięcie popędu seksualnego na aktywność twórczą",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Identyfikacja projekcyjna jest bardziej złożona niż projekcja: obejmuje „wkładanie” nieakceptowanych aspektów self w obiekt i organizowanie relacji tak, by obiekt je odzwierciedlał. W klinice może to wywoływać silne reakcje w relacji, także w przeciwprzeniesieniu. Mechanizm ten jest kluczowy dla rozumienia wczesnych relacji z obiektem i prymitywnych obron.",
+                    category: "Klein - mechanizmy obronne",
+                },
+                {
+                    question:
+                        "Które dwa rodzaje selfobjectów wyróżnia się klasycznie u Kohuta (zaznacz 2 poprawne)?",
+                    options: [
+                        "Mirroring i idealizing",
+                        "Sublimating i reaction-forming",
+                        "Anima i animus",
+                        "Press i thema",
+                    ],
+                    correct: [0, 0],
+                    explanation:
+                        "Kohut opisywał selfobjecty jako funkcje relacyjne konieczne dla rozwoju self. Dwa klasyczne typy to mirroring (potwierdzanie i odbijanie wartości) oraz idealizing (możliwość idealizacji silnego, spokojnego obiektu i czerpania z niego regulacji). Pozostałe pary pojęć pochodzą z innych tradycji teoretycznych i nie są typami selfobjectów.",
+                    category: "Kohut - selfobjects",
+                },
+                {
+                    question:
+                        "W modelu Kernberga, „testowanie rzeczywistości” w organizacji borderline jest zazwyczaj:",
+                    options: [
+                        "Zasadniczo zachowane, choć może ulegać przejściowym zaburzeniom pod silnym stresem",
+                        "Trwale zniesione, z dominacją urojeń w każdej sytuacji",
+                        "Nieistotne, bo Kernberg odrzucał pojęcie rzeczywistości psychicznej",
+                        "Równoznaczne z inteligencją ogólną",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Kernberg odróżnia organizację borderline od psychotycznej m.in. poziomem testowania rzeczywistości. W borderline zwykle jest ono utrzymane, choć mogą pojawiać się epizody quasi-psychotyczne w stresie. To pozwala rozumieć, dlaczego pacjenci mogą funkcjonować względnie adaptacyjnie, a jednocześnie mieć prymitywne obrony i niestabilną tożsamość.",
+                    category: "Kernberg - kryteria organizacji",
+                },
+                {
+                    question:
+                        "Która interpretacja NAJLEPIEJ oddaje relację między facetycznością NEO-PI-R a trafnością predykcyjną w badaniach?",
+                    options: [
+                        "Facety mogą poprawiać predykcję specyficznych zachowań, bo rozbijają szeroką domenę na bardziej jednorodne komponenty",
+                        "Facety zawsze pogarszają trafność, bo zwiększają błąd losowy",
+                        "Facety są nielegalne psychometrycznie, bo łamią założenia rzetelności",
+                        "Facety nie mają sensu, bo cechy są wyłącznie sytuacyjne",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Szerokie domeny bywają dobrymi predyktorami ogólnymi, ale mogą maskować różne mechanizmy wewnętrzne. Facety pozwalają uchwycić bardziej precyzyjny profil, np. czy neurotyczność wynika głównie z lęku czy drażliwości. To często zwiększa trafność kryterialną dla konkretnych wyników, choć wymaga kontroli wielokrotnego testowania i kolinearności.",
+                    category: "Wielka Piątka - NEO-PI-R i facety",
+                },
+                {
+                    question:
+                        "Które dwa elementy są typowe dla koncepcji „self” u Rogersa (zaznacz 2 poprawne)?",
+                    options: [
+                        "Organizmowe doświadczenie jako punkt odniesienia, które może być zniekształcane przez obrony",
+                        "Stały konflikt popędowy jako jedyny motor organizacji self",
+                        "Dążenie do kongruencji między doświadczeniem a obrazem siebie",
+                        "Archetyp Jaźni jako ponadindywidualne centrum",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "U Rogersa self to organizacja doświadczeń w obraz siebie, która może oddalać się od doświadczenia, gdy działają warunki wartości. Zdrowie psychiczne wiąże się z kongruencją: zgodnością self z bieżącym doświadczeniem organizmu. Archetypy są jungowskie, a redukcja do konfliktu popędowego nie jest kluczowa w ujęciu humanistycznym.",
+                    category: "Rogers - self i kongruencja",
+                },
+                {
+                    question:
+                        "W analizie transakcyjnej, stan ego „Dorosły” jest NAJLEPIEJ rozumiany jako:",
+                    options: [
+                        "System przetwarzania informacji oparty na ocenie danych „tu i teraz”, niezależny od skryptowych reakcji Rodzica i Dziecka",
+                        "Zinternalizowany zestaw nakazów i zakazów moralnych",
+                        "Zbiór impulsów i popędów dążących do natychmiastowej gratyfikacji",
+                        "Archetypowa funkcja zbiorowej nieświadomości",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Dorosły u Berne’a odpowiada za realistyczną analizę sytuacji i podejmowanie decyzji na podstawie informacji aktualnych. Różni się od Rodzica (introjekty norm) i Dziecka (emocjonalne reakcje i potrzeby). Praca terapeutyczna często polega na wzmacnianiu Dorosłego, by ograniczyć automatyczne scenariusze i gry.",
+                    category: "Berne - stany ego",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ oddaje różnicę między rGE a G×E?",
+                    options: [
+                        "rGE dotyczy tego, że genotyp wpływa na ekspozycję na określone środowiska, a G×E dotyczy tego, że efekt środowiska zależy od genotypu",
+                        "rGE i G×E są identyczne i zamiennie stosowane",
+                        "rGE dotyczy wyłącznie wpływu środowiska na geny, a G×E wyłącznie wpływu genów na środowisko",
+                        "G×E odnosi się do dziedziczności h², a rGE do rzetelności testu",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Korelacja geny–środowisko (rGE) opisuje, że osoby o pewnych predyspozycjach częściej trafiają do pewnych środowisk (np. aktywne poszukiwanie stymulacji). Interakcja G×E mówi, że ten sam czynnik środowiskowy ma różny efekt zależnie od genotypu (lub odwrotnie). To odrębne mechanizmy, które mogą współwystępować i komplikować wnioskowanie przyczynowe.",
+                    category: "Genetyka zachowania - rGE vs G×E",
+                },
+                {
+                    question:
+                        "Który opis NAJLEPIEJ pasuje do „układu nagrody” w kontekście różnic osobowościowych?",
+                    options: [
+                        "Sieci obejmujące m.in. prążkowie brzuszne i szlaki dopaminergiczne, powiązane z motywacją podejścia i wrażliwością na wzmocnienia",
+                        "Wyłącznie ciało migdałowate odpowiadające za strach, niezwiązane z motywacją",
+                        "Zespół struktur pnia mózgu regulujących wyłącznie sen",
+                        "Mechanizm psychologiczny bez jakichkolwiek korelatów neuronalnych",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Układ nagrody wiąże się z przetwarzaniem wzmocnień, przewidywaniem nagrody i uczeniem się na podstawie konsekwencji. Często łączy się go z motywacją podejścia, impulsywnością oraz aspektami ekstrawersji. Redukcja do pojedynczej struktury (np. samego ciała migdałowatego) jest zbyt uproszczona.",
+                    category: "Neuronauka osobowości - układ nagrody",
+                },
+                {
+                    question:
+                        "Które dwa stwierdzenia najlepiej opisują rozwój osobowości w cyklu życia w ujęciu współczesnym (zaznacz 2 poprawne)?",
+                    options: [
+                        "Średnie poziomy niektórych cech mogą zmieniać się systematycznie (np. wzrost sumienności) mimo względnej stabilności rangowej",
+                        "Osobowość jest całkowicie niezmienna po 18. roku życia",
+                        "Stabilność rangowa nie wyklucza zmiany średniego poziomu w populacji",
+                        "Każda zmiana cech jest artefaktem błędu pomiaru i nie ma znaczenia praktycznego",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Badania podłużne pokazują, że osoby zachowują względne różnice (stabilność rangowa), ale średnie poziomy cech mogą się przesuwać wraz z rolami i doświadczeniem. To pozwala jednocześnie mówić o stabilności i rozwoju. Współczesne modele unikają skrajnych tez o całkowitej niezmienności lub o czysto artefaktycznej naturze zmian.",
+                    category: "Rozwój osobowości - stabilność i zmiana",
+                },
+                {
+                    question:
+                        "W kontekście technologii cyfrowej, które stwierdzenie jest NAJLEPSZE naukowo przy interpretacji związków osobowości z zachowaniami online?",
+                    options: [
+                        "Należy uwzględniać selekcję i konstrukcję środowisk (osoby wybierają platformy/aktywności), a także różnice między samoopisem a danymi behawioralnymi",
+                        "Dane z aplikacji zawsze są obiektywne i nie wymagają walidacji",
+                        "Samoopis jest bezużyteczny i powinien być całkowicie porzucony",
+                        "Zachowania online są niezależne od cech, bo internet „zniwelował osobowość”",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Zachowania cyfrowe są wypadkową cech, motywów, norm platformy i affordancji technologicznych. Osoby nie tylko reagują na środowisko, ale też je wybierają i współtworzą, co komplikuje wnioskowanie. Najlepsze badania łączą wskaźniki behawioralne z samoopisami i danymi kontekstowymi, testując trafność i ograniczenia obu źródeł.",
+                    category: "Osobowość a technologia cyfrowa - metodologia",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ charakteryzuje funkcję teorii osobowości jako narzędzia integracji wiedzy?",
+                    options: [
+                        "Pozwala łączyć opis struktury (cech) z procesami (mechanizmami) oraz rozwojem i kontekstem, tworząc spójne wyjaśnienia zachowania",
+                        "Zastępuje potrzebę badań empirycznych, bo oferuje kompletne odpowiedzi",
+                        "Służy wyłącznie do klasyfikacji typów i nie dotyczy dynamiki",
+                        "Jest synonimem testu osobowości i ogranicza się do wyników kwestionariusza",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Dobra teoria osobowości integruje poziomy analizy: strukturalny (co różni ludzi), procesowy (jak funkcjonują), rozwojowy (jak się zmieniają) i sytuacyjny (kiedy co się ujawnia). Dzięki temu przewidywanie zachowania nie jest tylko opisem, ale ma mechanizmy wyjaśniające. Redukowanie teorii do narzędzia lub do typologii zubaża jej funkcję naukową.",
+                    category:
+                        "Osobowość jako przedmiot psychologii - funkcje teorii",
+                },
+                {
+                    question:
+                        "Który opis NAJLEPIEJ oddaje „kompleks” w psychologii analitycznej Junga?",
+                    options: [
+                        "Autonomiczna, afektywnie naładowana konfiguracja reprezentacji i wspomnień, która może przejmować kontrolę nad zachowaniem",
+                        "Wyłącznie świadome przekonanie o sobie modyfikowane racjonalnie",
+                        "Zestaw pięciu czynników osobowości ujawniony analizą czynnikową",
+                        "Mechanizm obronny polegający na sublimacji",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Kompleks u Junga to zorganizowany węzeł treści psychicznych związanych silnym afektem, często uruchamiany przez bodźce skojarzeniowe. Może działać częściowo autonomicznie, powodując „opętanie” przez temat, lapsusy czy silne reakcje. To pojęcie łączy dynamikę emocji z organizacją poznawczą doświadczenia i relacji.",
+                    category: "Jung - kompleksy",
+                },
+                {
+                    question:
+                        "W ujęciu Eriksona, różnica między „tożsamością” a „tożsamością negatywną” polega głównie na tym, że:",
+                    options: [
+                        "Tożsamość negatywna to przyjęcie ról i wartości sprzecznych z oczekiwaniami otoczenia jako sposób rozwiązania kryzysu bez autentycznej integracji",
+                        "Tożsamość negatywna jest równoznaczna z psychozą",
+                        "Tożsamość negatywna oznacza brak pamięci autobiograficznej",
+                        "Tożsamość negatywna jest nazwą dla niskiej sumienności",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Erikson opisywał tożsamość jako spójną integrację ról, wartości i ciągłości Ja. Tożsamość negatywna bywa wyborem „na przekór” — przyjęciem społecznie nieakceptowanych ról, co daje pozorne poczucie określenia siebie, ale może utrwalać konflikt. Nie jest to kategoria neuropsychologiczna ani prosty odpowiednik cechy z modeli cechowych.",
+                    category: "Erikson - tożsamość",
+                },
+                {
+                    question:
+                        "Które dwa pojęcia są kluczowe dla relacji „potrzeba–nacisk” u Murraya (zaznacz 2 poprawne)?",
+                    options: [
+                        "Alpha press i beta press (obiektywny vs subiektywnie spostrzegany nacisk)",
+                        "Archetyp i cień",
+                        "Dyfuzja tożsamości i rozszczepienie",
+                        "Zasada przyjemności i zasada rzeczywistości",
+                    ],
+                    correct: [0, 0],
+                    explanation:
+                        "Murray rozróżniał naciski w sensie obiektywnych właściwości sytuacji (alpha press) oraz subiektywnie doświadczanych i interpretowanych (beta press). To pozwala analizować, dlaczego ta sama sytuacja może wywoływać różne potrzeby u różnych osób. Pozostałe pary pojęć pochodzą z innych tradycji (Jung, Kernberg, Freud) i nie są terminami Murraya.",
+                    category: "Murray - press (alpha/beta)",
+                },
+                {
+                    question: "W koncepcji Allporta, „proprium” odnosi się do:",
+                    options: [
+                        "Zorganizowanego poczucia siebie, rozwijającego się etapowo i integrującego doświadczenia w spójny rdzeń Ja",
+                        "Wyłącznie popędów biologicznych i ich natychmiastowej gratyfikacji",
+                        "Sposobu klasyfikowania ludzi do typów temperamentu",
+                        "Zbiorowej nieświadomości i archetypów",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Allport opisywał proprium jako rozwijający się system Ja, obejmujący m.in. obraz siebie, poczucie sprawstwa i wartości. To idiograficzna perspektywa integracji doświadczeń i celów, nie redukowalna do popędów. W jego ujęciu dojrzała osobowość wiąże się z autonomią funkcjonalną i świadomymi dążeniami.",
+                    category: "Allport - proprium",
+                },
+                {
+                    question:
+                        "Które dwa wskaźniki najbardziej zwiększają wiarygodność wniosków o cechach w badaniach wielometodowych (zaznacz 2 poprawne)?",
+                    options: [
+                        "Zgodność między źródłami (np. samoopis i informanci) oraz powiązania z zachowaniem/konsekwencjami życiowymi",
+                        "Wyłącznie wysoka korelacja między dwiema wersjami tego samego kwestionariusza",
+                        "Brak jakichkolwiek różnic kulturowych w średnich poziomach jako warunek konieczny",
+                        "Całkowite unikanie danych behawioralnych, bo są „sytuacyjne”",
+                    ],
+                    correct: [0, 0],
+                    explanation:
+                        "Triangulacja metod zwiększa trafność: jeśli różne źródła oceny wskazują podobny profil, maleje ryzyko artefaktu metody. Dodatkowo zewnętrzne kryteria (zachowanie, zdrowie, sukcesy) pokazują użyteczność predykcyjną cech. Sama zgodność wersji kwestionariusza mówi głównie o rzetelności, nie o trafności konstruktu.",
+                    category:
+                        "Psychometria osobowości - trafność wielometodowa",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ opisuje „autonomię funkcjonalną motywów” u Allporta?",
+                    options: [
+                        "Motywy mogą uniezależniać się od pierwotnych przyczyn rozwojowych i działać jako samopodtrzymujące cele dorosłego",
+                        "Każdy motyw dorosłego jest bezpośrednim echem wczesnej fiksacji psychoseksualnej",
+                        "Motywy są wyłącznie nieświadome i nie podlegają refleksji",
+                        "Motywy są zawsze identyczne z potrzebami biologicznymi",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Allport twierdził, że nawet jeśli dany wzorzec działania miał określone źródła w przeszłości, w dorosłości może nabrać autonomicznej wartości. Przykładowo człowiek może kontynuować aktywność z powodów, które nie są tożsame z pierwotnymi. To odróżnia jego podejście od silnie redukcjonistycznych modeli motywacji.",
+                    category: "Allport - autonomia funkcjonalna",
+                },
+                {
+                    question:
+                        "Które dwa elementy najlepiej charakteryzują „kryteria dobrej teorii” w psychologii osobowości (zaznacz 2 poprawne)?",
+                    options: [
+                        "Sprawdzalność empiryczna (falsyfikowalność) i zdolność do przewidywania",
+                        "Im większa liczba pojęć, tym teoria jest z definicji lepsza",
+                        "Parsymonia przy zachowaniu adekwatności wyjaśnienia",
+                        "Odporność na jakąkolwiek krytykę dzięki niejednoznacznym definicjom",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Teoria osobowości powinna generować testowalne hipotezy i przewidywać zachowanie lub wyniki życiowe. Parsymonia jest zaletą, gdy nie poświęca treści wyjaśniającej — mniejsza liczba założeń ułatwia interpretację i replikację. Niejednoznaczność może chronić teorię przed falsyfikacją, ale obniża jej wartość naukową.",
+                    category:
+                        "Osobowość jako przedmiot psychologii - kryteria teorii",
+                },
+                {
+                    question:
+                        "W psychodynamicznym opisie obron, „izolacja afektu” NAJLEPIEJ oznacza:",
+                    options: [
+                        "Oddzielenie treści poznawczej od komponentu emocjonalnego, co pozwala mówić o zdarzeniu bez przeżywania uczuć",
+                        "Przypisanie własnych impulsów innej osobie",
+                        "Zamianę popędu w zachowanie przeciwne",
+                        "Wyparcie całej treści do nieświadomości bez możliwości przypomnienia",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Izolacja afektu polega na zachowaniu dostępu do faktów i narracji przy jednoczesnym stępieniu lub odcięciu emocji. Jest to częste np. w opisie traum lub tematów wywołujących lęk, gdy osoba brzmi „chłodno” mimo dramatycznej treści. To mechanizm różny od projekcji, reakcji upozorowanej czy klasycznego wyparcia.",
+                    category: "Psychodynamika - mechanizmy obronne",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ opisuje rolę superego u Freuda?",
+                    options: [
+                        "Internalizuje normy i ideały, generując poczucie winy oraz aspiracje Ja idealnego",
+                        "Jest magazynem popędów seksualnych i agresywnych",
+                        "Odpowiada wyłącznie za pamięć epizodyczną",
+                        "Jest tym samym co Dorosły w AT",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Superego powstaje poprzez internalizację norm i zakazów oraz identyfikacje z opiekunami. Zawiera komponent sumienia (wina) i ideału Ja (standardy). W psychoanalizie superego bywa źródłem lęku moralnego i samokrytycyzmu, co wpływa na styl obron i symptomy.",
+                    category: "Freud - superego",
+                },
+                {
+                    question:
+                        "Który kliniczny opis NAJLEPIEJ pasuje do kohutowskich deficytów self związanych z brakiem mirroring?",
+                    options: [
+                        "Chroniczna chwiejność samooceny i potrzeba zewnętrznego potwierdzania, z wrażliwością na upokorzenie",
+                        "Stałe urojenia prześladowcze niezależnie od relacji",
+                        "Wyłącznie wzrost sumienności i perfekcjonizm bez wahań wartości",
+                        "Brak zdolności do odczuwania jakichkolwiek emocji",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "U Kohuta mirroring selfobject wspiera rozwój stabilnej samooceny i ambicji. Gdy jest deficyt, osoba może silnie zależeć od potwierdzania i reagować wstydem lub złością na krytykę. Nie jest to opis typowych urojeń ani całkowitej anhedonii, lecz raczej zaburzeń regulacji self i podatności narcystycznej.",
+                    category: "Kohut - deficyty mirroring",
+                },
+                {
+                    question:
+                        "Które dwa elementy są kluczowe dla jungowskiej pracy z cieniem (zaznacz 2 poprawne)?",
+                    options: [
+                        "Rozpoznawanie projekcji i odzyskiwanie wypartych/nieakceptowanych cech",
+                        "Całkowite usunięcie „negatywnych” aspektów osobowości poprzez tłumienie",
+                        "Akceptacja ambiwalencji i ograniczeń ego w kierunku większej całości",
+                        "Redukcja treści do pięciu wymiarów kwestionariuszowych",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Cień obejmuje aspekty siebie, które ego odrzuca, przez co łatwo są projektowane na innych. Praca polega na rozpoznaniu tych projekcji i stopniowym włączeniu odrzuconych treści do świadomości, co zmniejsza polaryzację. To sprzyja indywiduacji, a nie tłumieniu czy redukcji doświadczenia do samej psychometrii.",
+                    category: "Jung - cień",
+                },
+                {
+                    question:
+                        "W koncepcji Kohuta, „transmutująca internalizacja” jest NAJLEPIEJ opisana jako:",
+                    options: [
+                        "Stopniowe przyswajanie funkcji selfobject po serii optymalnych frustracji, co buduje struktury self",
+                        "Nagła zmiana osobowości wskutek jednorazowego wglądu",
+                        "Mechanizm obronny polegający na introjekcji superego",
+                        "Proces uczenia instrumentalnego oparty wyłącznie na karze",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Kohut zakładał, że opiekun pełni funkcje regulacyjne, których dziecko jeszcze nie ma. Poprzez powtarzalne doświadczenia i drobne rozczarowania dziecko internalizuje te funkcje i zaczyna je wykonywać samodzielnie. To proces strukturotwórczy, odróżniający psychologię self od modeli, które kładą nacisk głównie na konflikt popędowy.",
+                    category: "Kohut - transmutująca internalizacja",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ odróżnia pozycję depresyjną Klein od klasycznego „poczucia winy” w sensie moralnym?",
+                    options: [
+                        "To poczucie winy jest związane z fantazjami o zranieniu ukochanego obiektu i uruchamia reparację, a nie tylko ocenę moralną czynu",
+                        "To wyłącznie intelektualna ocena norm społecznych bez komponentu relacyjnego",
+                        "To stan całkowicie niezwiązany z relacjami z obiektem",
+                        "To efekt jedynie biologicznej reaktywności autonomicznej",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "U Klein poczucie winy w pozycji depresyjnej wiąże się z integracją obiektu i uświadomieniem ambiwalencji: agresja mogła zranić ten sam obiekt, który jest kochany. Stąd pojawia się troska i reparacja, czyli dążenie do naprawy relacji w świecie fantazji i realnym. To nie jest wyłącznie moralna ocena norm, lecz zjawisko relacyjne i rozwojowe.",
+                    category: "Klein - pozycja depresyjna a wina",
+                },
+                {
+                    question:
+                        "W analizie transakcyjnej, „scenariusz życiowy” oznacza przede wszystkim:",
+                    options: [
+                        "Wczesną, często nieuświadomioną decyzję o tym, jak potoczy się życie, utrwalaną przez powtarzalne wybory i gry",
+                        "Dowolny plan zawodowy tworzony w dorosłości",
+                        "Sumę wyników z kwestionariusza osobowości",
+                        "Przejściowy nastrój zależny od stresu dnia",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Berne opisywał scenariusz jako wczesną narrację o sobie i świecie, kształtowaną przez przekazy rodzicielskie i doświadczenia. Scenariusz organizuje wybory, relacje i powtarzalne gry, często mimo kosztów. Praca terapeutyczna polega na rozpoznaniu scenariusza i zwiększeniu elastyczności decyzji Dorosłego.",
+                    category: "Berne - scenariusze życiowe",
+                },
+                {
+                    question:
+                        "Które dwa aspekty zwiększają ryzyko błędnej interpretacji związków cech z mózgiem w badaniach neuroobrazowych (zaznacz 2 poprawne)?",
+                    options: [
+                        "Wielokrotne porównania i ryzyko wyników fałszywie dodatnich",
+                        "Zawsze idealna replikowalność pojedynczego badania fMRI",
+                        "Niska moc statystyczna i selekcja próby",
+                        "Brak potrzeby kontroli ruchu w skanerze",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Neuroobrazowanie często testuje wiele wokseli lub regionów, co wymaga korekt na wielokrotne porównania. Niska moc i niereprezentatywne próby zwiększają ryzyko niestabilnych efektów. Dodatkowo ruch w skanerze jest istotnym źródłem artefaktów, więc tezy o „braku potrzeby kontroli” są metodologicznie błędne.",
+                    category: "Neuronauka osobowości - metodologia",
+                },
+                {
+                    question:
+                        "W ujęciu ewolucyjnym osobowości, które wyjaśnienie jest NAJLEPSZE dla utrzymywania się zmienności cech w populacji?",
+                    options: [
+                        "Równowaga kosztów i korzyści cech zależnie od środowiska oraz strategie warunkowe mogą utrzymywać polimorfizm",
+                        "Selekcja naturalna zawsze eliminuje zmienność, więc cechy powinny być identyczne u wszystkich",
+                        "Zmienność wynika wyłącznie z błędu pomiaru kwestionariuszy",
+                        "Zmienność jest dowodem, że osobowość nie ma podstaw biologicznych",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Podejścia ewolucyjne wskazują, że różne poziomy cech mogą być adaptacyjne w różnych warunkach (np. ryzyko vs bezpieczeństwo). Mogą działać mechanizmy doboru zależnego od częstości, zmienność środowiska i kompromisy (trade-offs) między korzyściami a kosztami. Dlatego utrzymywanie wariancji w cechach nie przeczy selekcji, lecz może być jej produktem.",
+                    category: "Biologiczne podstawy - podejście ewolucyjne",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ opisuje różnicę między stabilnością rangową a stabilnością absolutną cech?",
+                    options: [
+                        "Stabilność rangowa dotyczy utrzymywania kolejności osób względem siebie, a absolutna dotyczy niezmienności średniego poziomu cechy",
+                        "Stabilność rangowa oznacza brak jakichkolwiek zmian w życiu, a absolutna oznacza jedynie zmienność sytuacyjną",
+                        "Obie są tym samym i nie ma sensu ich rozróżniać",
+                        "Stabilność absolutna dotyczy tylko temperamentu, a rangowa tylko charakteru",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Stabilność rangowa mówi, czy osoby zachowują podobną pozycję w grupie (np. ktoś nadal jest bardziej sumienny niż inni). Stabilność absolutna dotyczy tego, czy przeciętny poziom cechy pozostaje stały w czasie. Badania często pokazują, że rangowość bywa wysoka, a absolutne poziomy mogą się przesuwać wraz z wiekiem i rolami społecznymi.",
+                    category: "Rozwój osobowości - stabilność",
+                },
+                {
+                    question:
+                        "Które dwa elementy są najbardziej typowe dla klinicznego rozumienia „dyfuzji tożsamości” u Kernberga (zaznacz 2 poprawne)?",
+                    options: [
+                        "Brak spójnej, zintegrowanej narracji o sobie i innych, z gwałtownymi zmianami ocen",
+                        "Stabilny, realistyczny obraz siebie i obiektów mimo konfliktów",
+                        "Polaryzacja reprezentacji na „całkiem dobre” i „całkiem złe” bez integracji",
+                        "Wyłącznie deficyt pamięci semantycznej",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Dyfuzja tożsamości przejawia się niestabilnością obrazu siebie i innych oraz trudnością w utrzymaniu spójnych wartości i celów. Polaryzacja reprezentacji jest podtrzymywana przez rozszczepienie, co sprzyja idealizacji i dewaluacji. To nie jest problem stricte neuropsychologiczny pamięci, lecz strukturalna organizacja relacji i self.",
+                    category: "Kernberg - dyfuzja tożsamości",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ opisuje relację między „motywami” a „cechami” w strukturze teorii osobowości?",
+                    options: [
+                        "Cechy opisują typowe tendencje zachowania, a motywy dotyczą celów i wartości, które nadają kierunek i sens działaniu",
+                        "Motywy są zawsze tożsame z ekstrawersją, a cechy z neurotycznością",
+                        "Cechy są wyłącznie nieświadome, a motywy wyłącznie biologiczne",
+                        "Motywy nie mają wpływu na zachowanie, bo liczy się tylko temperament",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Cechy mówią, jak ktoś zwykle funkcjonuje (np. jak często jest zorganizowany), a motywy – po co i dlaczego dąży do celów (np. potrzeba osiągnięć). W praktyce oba poziomy mogą się uzupełniać: podobna cecha może służyć różnym motywom. Dlatego teorie integracyjne próbują łączyć dyspozycje z celami, wartościami i samoregulacją.",
+                    category:
+                        "Osobowość jako przedmiot psychologii - cechy i motywy",
+                },
+                {
+                    question:
+                        "W modelu topograficznym Freuda, mechanizm wyparcia jest NAJLEPIEJ opisywany jako:",
+                    options: [
+                        "Utrzymywanie nieakceptowanych treści poza świadomością poprzez opór, mimo że mogą one powracać w postaci objawów",
+                        "Świadome zapomnienie neutralnych informacji",
+                        "Zamiana impulsu w zachowanie przeciwne",
+                        "Przeniesienie emocji z obiektu na inny obiekt",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Wyparcie to podstawowy mechanizm obronny polegający na odsunięciu konfliktowych treści z pola świadomości. Nie oznacza to ich zniknięcia — w psychoanalizie powracają jako symptomy, marzenia senne lub przejęzyczenia. Różni się od reakcji upozorowanej, przemieszczenia czy zwykłego zapominania.",
+                    category: "Freud - wyparcie",
+                },
+                {
+                    question:
+                        "Które dwa elementy są charakterystyczne dla jungowskich archetypów (zaznacz 2 poprawne)?",
+                    options: [
+                        "Są formami/strukturami organizującymi doświadczenie, a nie gotowymi, konkretnymi treściami biograficznymi",
+                        "Są w pełni wyuczone i zależne wyłącznie od kultury rodzinnej",
+                        "Przejawiają się w symbolach, mitach i snach w różnych kulturach",
+                        "Są identyczne z czynnikami Wielkiej Piątki",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Archetypy u Junga to uniwersalne formy, które nadają kształt treściom psychicznym, ale nie są samymi treściami. Ujawniają się w symbolice snów, mitów i narracji kulturowych, często w zaskakująco podobnych motywach międzykulturowych. Nie są to czynniki psychometryczne ani proste efekty uczenia rodzinnego.",
+                    category: "Jung - archetypy",
+                },
+                {
+                    question:
+                        "W teorii ego (w szerokim sensie tradycji psychoanalitycznej), „funkcje ego” obejmują NAJLEPIEJ:",
+                    options: [
+                        "Testowanie realności, kontrolę impulsów, tolerancję frustracji i syntezę doświadczenia",
+                        "Wyłącznie generowanie popędów seksualnych",
+                        "Zawsze całkowicie nieświadome treści archetypowe",
+                        "Wyłącznie cechy kardynalne Allporta",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Teorie ego podkreślają adaptacyjne funkcje ego, które umożliwiają radzenie sobie z rzeczywistością i konfliktami. Obejmują m.in. testowanie realności, planowanie, kontrolę impulsów i integrację reprezentacji. To ujęcie różni się od redukcji ego do roli biernego „sługusa” id i podkreśla jego autonomię.",
+                    category: "Teorie ego - funkcje ego",
+                },
+                {
+                    question:
+                        "Który opis NAJLEPIEJ odpowiada „organizacji narcystycznej” w ujęciu Kernberga (w odróżnieniu od Kohuta)?",
+                    options: [
+                        "Dominacja grandiozalnego self jako obronnej organizacji z idealizacją i dewaluacją obiektów, często z agresją i eksploatacją",
+                        "Wyłącznie deficyt mirroring bez komponentu agresji i relacji z obiektem",
+                        "Stabilne, dojrzałe relacje obiektowe i wysoka empatia jako reguła",
+                        "Brak jakichkolwiek obron i pełna kongruencja",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Kernberg akcentował strukturalno-obronny charakter patologicznego narcyzmu: grandiozalne self może maskować kruchość i wspierać kontrolę relacji przez idealizację/dewaluację. W jego ujęciu ważna jest też rola agresji i prymitywnych obron. Kohut częściej podkreślał deficyty i brakujące funkcje selfobject, co daje inny akcent kliniczny, choć oba podejścia mogą się uzupełniać.",
+                    category: "Kernberg - narcyzm",
+                },
+                {
+                    question:
+                        "Która para najlepiej oddaje różnicę między „pozycją” u Klein a „stadium” u Freuda?",
+                    options: [
+                        "Pozycja opisuje organizację relacji z obiektem i dominujące lęki/obrony, a stadium opisuje ognisko libido i konflikty psychoseksualne w rozwoju",
+                        "Pozycja dotyczy tylko dorosłych, a stadium tylko niemowląt",
+                        "Pozycja jest wyłącznie biologiczna, a stadium wyłącznie społeczno-kulturowe",
+                        "Oba terminy oznaczają to samo i są wymienne",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Kleinowskie pozycje to sposoby organizacji doświadczenia obiektu (częściowy/całościowy), lęków i obron, które mogą nawracać także w dorosłości. Freudowskie stadia to sekwencja rozwoju psychoseksualnego związana z ogniskiem libido i typowymi konfliktami. Rozróżnienie jest ważne, bo pozwala inaczej interpretować regresję i powtarzalność wzorców w terapii.",
+                    category: "Klein vs Freud - porównanie",
+                },
+                {
+                    question:
+                        "Które dwa stwierdzenia są trafne dla koncepcji „typów” w psychologii osobowości (zaznacz 2 poprawne)?",
+                    options: [
+                        "Typy mogą ułatwiać komunikację kliniczną, ale ryzykują sztuczne kategoryzowanie kontinuów",
+                        "Typy zawsze mają lepszą trafność predykcyjną niż modele wymiarowe",
+                        "Typy często implikują kategorie jakościowe, podczas gdy cechy zwykle są skalowane ilościowo",
+                        "Modele typologiczne z definicji nie wymagają operacjonalizacji i pomiaru",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Typologie bywają użyteczne heurystycznie, bo tworzą rozpoznawalne profile, ale mogą redukować złożoność i prowadzić do esencjalizacji. Cechy w modelach wymiarowych zwykle lepiej oddają rozkłady i pozwalają na precyzyjną analizę różnic nasilenia. Zarówno typy, jak i wymiary wymagają jasnej operacjonalizacji, jeśli mają być badane empirycznie.",
+                    category:
+                        "Osobowość jako przedmiot psychologii - typologie",
+                },
+                {
+                    question:
+                        "W kontekście badań nad dziedzicznością cech (h²), które stwierdzenie jest NAJTRAFNIEJSZE?",
+                    options: [
+                        "Dziedziczność odnosi się do wariancji w populacji w danych warunkach, a nie do „procentu cechy” u jednostki",
+                        "h² oznacza, że cecha jest niezmienna i nie podlega wpływom środowiska",
+                        "Wysoka dziedziczność wyklucza skuteczność interwencji",
+                        "h² jest miarą rzetelności kwestionariusza",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Dziedziczność to parametr populacyjny zależny od zakresu środowisk i badanej próby. Nie mówi, w jakim stopniu konkretna osoba „ma cechę z genów”, ani nie przesądza o modyfikowalności. Nawet przy wysokiej h² interwencje mogą działać, bo środowisko nadal wnosi część wariancji i może zmieniać trajektorie rozwoju.",
+                    category: "Genetyka zachowania - dziedziczność",
+                },
+                {
+                    question:
+                        "Który opis NAJLEPIEJ pasuje do różnicy między „reaktywnością” a „regulacją” emocji w ujęciu procesowym?",
+                    options: [
+                        "Reaktywność dotyczy siły/szybkości odpowiedzi emocjonalnej, a regulacja dotyczy sposobów modulowania jej przebiegu i czasu trwania",
+                        "Reaktywność jest zawsze świadoma, a regulacja zawsze nieświadoma",
+                        "Reaktywność dotyczy tylko gniewu, a regulacja tylko lęku",
+                        "Regulacja oznacza brak emocji, a reaktywność oznacza ich nadmiar",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Reaktywność opisuje, jak łatwo i jak silnie system emocjonalny się aktywuje. Regulacja dotyczy procesów, które wpływają na intensywność i czas trwania emocji (np. reinterpretacja, hamowanie, akceptacja). Osoba może być wysoko reaktywna, ale dobrze regulująca, albo odwrotnie — co ma różne konsekwencje kliniczne.",
+                    category: "Procesy osobowości - emocje",
+                },
+                {
+                    question:
+                        "W teorii May’a, centralnym problemem egzystencjalnym wiązanym z lękiem jest przede wszystkim:",
+                    options: [
+                        "Konfrontacja z wolnością, odpowiedzialnością i możliwością niebytu, a nie tylko bodźce zagrażające",
+                        "Wyłącznie konflikt Edypalny",
+                        "Niski poziom pobudzenia ARAS",
+                        "Brak cechy ugodowości",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "May odróżniał lęk egzystencjalny od lęku neurotycznego i traktował go jako konsekwencję świadomości wolności i odpowiedzialności. Lęk wynika z konfrontacji z ograniczeniami życia, możliwością utraty sensu i niebytem. To perspektywa jakościowo inna niż redukcja do bodźców zagrażających czy do pojedynczych cech kwestionariuszowych.",
+                    category: "May - ujęcie egzystencjalne",
+                },
+                {
+                    question:
+                        "Które dwa elementy najlepiej oddają „transakcję ukrytą” w analizie transakcyjnej (zaznacz 2 poprawne)?",
+                    options: [
+                        "Jawny komunikat na poziomie społecznym i inny, ukryty komunikat na poziomie psychologicznym",
+                        "Brak jakichkolwiek stanów ego w komunikacji",
+                        "Częstość występowania wzorca w grach psychologicznych",
+                        "Zawsze komplementarność na obu poziomach jako warunek konieczny",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "Transakcja ukryta ma dwie linie: to, co mówi się wprost, oraz to, co „idzie pod spodem” i często kieruje relacją. Jest to typowy budulec gier, bo ukryty poziom prowadzi do przewidywalnej wypłaty. Nie jest prawdą, że zawsze musi być komplementarna na obu poziomach — właśnie niezgodność bywa źródłem napięcia i manipulacji.",
+                    category: "Berne - transakcje ukryte",
+                },
+                {
+                    question:
+                        "W podejściu CAPs, rola „kodowania sytuacji” polega przede wszystkim na tym, że:",
+                    options: [
+                        "To interpretacja i znaczenie nadawane sytuacji uruchamiają specyficzne jednostki poznawczo-afektywne i reakcje",
+                        "Sytuacje działają identycznie na wszystkich ludzi, niezależnie od kodowania",
+                        "Kodowanie dotyczy wyłącznie pamięci proceduralnej, nie emocji",
+                        "Kodowanie jest synonimem dziedziczności cech",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "W CAPS to, jak osoba rozumie sytuację (np. jako krytykę vs troskę), determinuje aktywację oczekiwań, afektu i celów. Dlatego dwie osoby mogą reagować inaczej w „tej samej” obiektywnie sytuacji. Kodowanie łączy procesy poznawcze i emocjonalne, a nie jest prostą funkcją genetyczną.",
+                    category: "Mischel - CAPS (kodowanie sytuacji)",
+                },
+                {
+                    question:
+                        "Które stwierdzenie NAJLEPIEJ opisuje rolę „systemów przekonań” w strukturze teorii osobowości?",
+                    options: [
+                        "Mogą działać jako filtry interpretacyjne, które modulują emocje i wybory, łącząc osobowość z poznaniem społecznym",
+                        "Są nieistotne, bo liczą się tylko cechy biologiczne",
+                        "Są zawsze w pełni świadome i nie podlegają zmianie",
+                        "Są tożsame z mechanizmami obronnymi",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Systemy przekonań (np. o sobie, świecie, innych) wpływają na interpretację zdarzeń i uruchamiane emocje, dlatego są kluczowe dla rozumienia zachowania. Łączą podejście osobowościowe z poznaniem społecznym i teoriami samoregulacji. Nie są tożsame z obronami, choć mogą z nimi współdziałać (np. racjonalizacje wspierające obraz siebie).",
+                    category:
+                        "Osobowość jako przedmiot psychologii - systemy przekonań",
+                },
+                {
+                    question:
+                        "W ujęciu Sullivana, lęk jest NAJLEPIEJ rozumiany jako:",
+                    options: [
+                        "Zjawisko interpersonalne przenoszone w relacji, szczególnie w kontakcie z opiekunem, wpływające na system Ja",
+                        "Wyłącznie biologiczna reakcja ciała migdałowatego bez znaczenia relacji",
+                        "Synonim psychotyczności",
+                        "Efekt wysokiej uczciwości–pokory",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Sullivan uważał, że lęk jest w dużej mierze ucieleśniony w relacjach i może być „udzielany” dziecku w kontakcie z opiekunem. Dziecko uczy się strategii redukcji lęku, co organizuje system Ja. To odmienne od podejść redukujących lęk do czystej neurobiologii lub do pojedynczej cechy.",
+                    category: "Sullivan - lęk i system Ja",
+                },
+                {
+                    question:
+                        "Które dwa elementy są typowe dla „kryzysu” u Eriksona (zaznacz 2 poprawne)?",
+                    options: [
+                        "Jest to normatywne napięcie rozwojowe wymagające integracji dwóch tendencji",
+                        "Jest to zawsze katastrofa kliniczna wymagająca hospitalizacji",
+                        "Sposób rozwiązania kryzysu wpływa na późniejsze kompetencje psychospołeczne",
+                        "Kryzys oznacza wyłącznie konflikt popędowy seksualny",
+                    ],
+                    correct: [0, 2],
+                    explanation:
+                        "U Eriksona kryzysy są normatywne: stanowią zadania rozwojowe, w których jednostka integruje dwie tendencje (np. zaufanie vs nieufność). Rozwiązania kształtują kompetencje i „siły ego” wpływające na kolejne etapy. To nie musi być kryzys kliniczny ani czysto popędowy konflikt w sensie Freuda.",
+                    category: "Erikson - pojęcie kryzysu",
+                },
+                {
+                    question:
+                        "W podejściu cech, która interpretacja jest NAJLEPSZA dla różnicy między „cechą” a „stanem”?",
+                    options: [
+                        "Cechy to względnie trwałe dyspozycje, a stany to chwilowe poziomy zachowania/afektu zależne od kontekstu",
+                        "Cechy są chwilowe, a stany trwałe",
+                        "Cechy dotyczą wyłącznie nieświadomości, a stany wyłącznie biologii",
+                        "Cechy i stany są nieodróżnialne i nie ma sensu ich mierzyć osobno",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "W psychologii osobowości cechy opisują typowy poziom i wzorzec funkcjonowania, natomiast stany to bieżące fluktuacje. ESM i badania dynamiki często pokazują, że cechy można rozumieć jako rozkład stanów w czasie. Rozróżnienie jest kluczowe dla interpretacji wyników: wysoki stan lęku nie musi oznaczać wysokiej cechy neurotyczności.",
+                    category: "Teorie cech - cecha vs stan",
+                },
+                {
+                    question:
+                        "Który opis NAJLEPIEJ pasuje do „motywu osiągnięć” w tradycji Murraya i badań pokrewnych?",
+                    options: [
+                        "Preferowanie zadań o umiarkowanej trudności, dążenie do standardu doskonałości i wrażliwość na informację zwrotną",
+                        "Unikanie wszelkich zadań i brak reakcji na sukces",
+                        "Wyłącznie poszukiwanie przyjemności sensorycznej bez celu",
+                        "Stały wzrost neurotyczności po porażce niezależnie od interpretacji",
+                    ],
+                    correct: 0,
+                    explanation:
+                        "Potrzeba osiągnięć u Murraya i w tradycji motywacyjnej wiąże się z dążeniem do standardów i kompetencji. Często zakłada się preferencję dla ??????????",
+                    category: "Teorie cech - ??????",
+                },
+            ];
+
+            const PsychologyQuiz = () => {
+                const [questions, setQuestions] = useState([]);
+                const [currentQuestion, setCurrentQuestion] = useState(0);
+                const [score, setScore] = useState(0);
+                const [showResult, setShowResult] = useState(false);
+                const [selectedAnswers, setSelectedAnswers] = useState([]);
+                const [answered, setAnswered] = useState(false);
+                const [userAnswers, setUserAnswers] = useState([]);
+
+                // Inicjalizacja - randomizacja pytań i odpowiedzi
+                useEffect(() => {
+                    const shuffledQuestions = shuffleArray(QUESTIONS_DATA).map(
+                        (q) => shuffleQuestionOptions(q),
+                    );
+                    setQuestions(shuffledQuestions);
+                }, []);
+
+                if (questions.length === 0) {
+                    return (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                minHeight: "100vh",
+                            }}
+                        >
+                            <div style={{ fontSize: "24px", color: "#e0e7ff" }}>
+                                Ładowanie pytań...
+                            </div>
+                        </div>
+                    );
+                }
+
+                const currentQ = questions[currentQuestion];
+                const isMultiple = currentQ.isMultipleCorrect;
+
+                const handleAnswer = (index) => {
+                    if (answered) return;
+
+                    if (isMultiple) {
+                        // Dla pytań z 2 odpowiedziami - toggle checkbox
+                        if (selectedAnswers.includes(index)) {
+                            setSelectedAnswers(
+                                selectedAnswers.filter((i) => i !== index),
+                            );
+                        } else {
+                            if (selectedAnswers.length < 2) {
+                                setSelectedAnswers([...selectedAnswers, index]);
+                            }
+                        }
+                    } else {
+                        // Dla pytań z 1 odpowiedzią - klasyczne radio
+                        setSelectedAnswers([index]);
+                    }
+                };
+
+                const submitAnswer = () => {
+                    if (selectedAnswers.length === 0) return;
+                    if (isMultiple && selectedAnswers.length !== 2) return;
+
+                    setAnswered(true);
+
+                    let isCorrect = false;
+                    if (isMultiple) {
+                        // Sprawdź czy obie odpowiedzi są poprawne
+                        const correctSet = new Set(currentQ.correct);
+                        const selectedSet = new Set(selectedAnswers);
+                        isCorrect =
+                            correctSet.size === selectedSet.size &&
+                            [...correctSet].every((x) => selectedSet.has(x));
+                    } else {
+                        isCorrect = selectedAnswers[0] === currentQ.correct;
+                    }
+
+                    setUserAnswers([
+                        ...userAnswers,
+                        {
+                            question: currentQuestion,
+                            selected: selectedAnswers,
+                            correct: isCorrect,
+                        },
+                    ]);
+
+                    if (isCorrect) {
+                        setScore(score + 1);
+                    }
+                };
+
+                const nextQuestion = () => {
+                    if (currentQuestion < questions.length - 1) {
+                        setCurrentQuestion(currentQuestion + 1);
+                        setSelectedAnswers([]);
+                        setAnswered(false);
+                    } else {
+                        setShowResult(true);
+                    }
+                };
+
+                const restartQuiz = () => {
+                    const shuffledQuestions = shuffleArray(QUESTIONS_DATA).map(
+                        (q) => shuffleQuestionOptions(q),
+                    );
+                    setQuestions(shuffledQuestions);
+                    setCurrentQuestion(0);
+                    setScore(0);
+                    setShowResult(false);
+                    setSelectedAnswers([]);
+                    setAnswered(false);
+                    setUserAnswers([]);
+                };
+
+                const getScoreMessage = () => {
+                    const percentage = (score / questions.length) * 100;
+                    if (percentage >= 90)
+                        return {
+                            text: "Fenomenalnie! Jesteś mistrzem!",
+                            emoji: "🏆",
+                        };
+                    if (percentage >= 75)
+                        return {
+                            text: "Świetnie! Bardzo dobra znajomość!",
+                            emoji: "🌟",
+                        };
+                    if (percentage >= 60)
+                        return { text: "Dobrze! Solidna wiedza!", emoji: "👍" };
+                    if (percentage >= 50)
+                        return {
+                            text: "Nieźle! Jeszcze trochę nauki!",
+                            emoji: "📚",
+                        };
+                    return {
+                        text: "Trzeba popracować! Do przodu!",
+                        emoji: "💪",
+                    };
+                };
+
+                const isCorrectAnswer = (index) => {
+                    if (isMultiple) {
+                        return currentQ.correct.includes(index);
+                    }
+                    return index === currentQ.correct;
+                };
+
+                return (
+                    <div style={{ minHeight: "100vh", padding: "2rem 1rem" }}>
+                        <div
+                            className="quiz-container"
+                            style={{ maxWidth: "56rem", margin: "0 auto" }}
+                        >
+                            {/* Header */}
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    marginBottom: "3rem",
+                                }}
+                            >
+                                <div
+                                    className="brain-icon"
+                                    style={{
+                                        display: "inline-block",
+                                        marginBottom: "1rem",
+                                    }}
+                                >
+                                    <Brain
+                                        size={64}
+                                        strokeWidth={1.5}
+                                        style={{ color: "#e0e7ff" }}
+                                    />
+                                </div>
+                                <h1
+                                    style={{
+                                        fontSize: "clamp(2.5rem, 5vw, 3.75rem)",
+                                        fontWeight: "bold",
+                                        marginBottom: "0.75rem",
+                                        color: "white",
+                                        fontFamily: "'Playfair Display', serif",
+                                        textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                                    }}
+                                >
+                                    Quiz Psychologii Osobowości
+                                </h1>
+                                <p
+                                    style={{
+                                        fontSize: "1.125rem",
+                                        color: "#e0e7ff",
+                                    }}
+                                >
+                                    Sprawdź swoją wiedzę - poziom zaawansowany
+                                </p>
+                            </div>
+
+                            {!showResult ? (
+                                <div
+                                    style={{
+                                        background: "white",
+                                        borderRadius: "1.5rem",
+                                        boxShadow:
+                                            "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    {/* Progress Bar */}
+                                    <div
+                                        style={{
+                                            background:
+                                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                            padding: "1.5rem",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "center",
+                                                marginBottom: "0.75rem",
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    fontSize: "0.875rem",
+                                                    fontWeight: "600",
+                                                    color: "white",
+                                                }}
+                                            >
+                                                Pytanie {currentQuestion + 1} z{" "}
+                                                {questions.length}
+                                            </span>
+                                            <span
+                                                style={{
+                                                    fontSize: "0.875rem",
+                                                    fontWeight: "600",
+                                                    color: "white",
+                                                }}
+                                            >
+                                                Punkty: {score}
+                                            </span>
+                                        </div>
+                                        <div
+                                            style={{
+                                                width: "100%",
+                                                background:
+                                                    "rgba(255,255,255,0.3)",
+                                                borderRadius: "9999px",
+                                                height: "0.75rem",
+                                                overflow: "hidden",
+                                            }}
+                                        >
+                                            <div
+                                                className="progress-bar"
+                                                style={{
+                                                    height: "100%",
+                                                    background: "white",
+                                                    borderRadius: "9999px",
+                                                    width: `${((currentQuestion + 1) / questions.length) * 100}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Question */}
+                                    <div style={{ padding: "2rem" }}>
+                                        <div style={{ marginBottom: "1.5rem" }}>
+                                            <div
+                                                style={{
+                                                    display: "inline-block",
+                                                    padding: "0.5rem 1rem",
+                                                    background: "#f3e8ff",
+                                                    borderRadius: "9999px",
+                                                    marginBottom: "1rem",
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontSize: "0.875rem",
+                                                        fontWeight: "600",
+                                                        color: "#6b21a8",
+                                                    }}
+                                                >
+                                                    {currentQ.category}
+                                                </span>
+                                            </div>
+                                            <h2
+                                                style={{
+                                                    fontSize:
+                                                        "clamp(1.5rem, 3vw, 1.875rem)",
+                                                    fontWeight: "bold",
+                                                    color: "#1f2937",
+                                                    lineHeight: "1.625",
+                                                    fontFamily:
+                                                        "'Playfair Display', serif",
+                                                }}
+                                            >
+                                                {currentQ.question}
+                                            </h2>
+                                            {isMultiple && !answered && (
+                                                <p
+                                                    style={{
+                                                        marginTop: "0.75rem",
+                                                        fontSize: "0.95rem",
+                                                        color: "#7c3aed",
+                                                        fontWeight: "600",
+                                                    }}
+                                                >
+                                                    💡 Zaznacz 2 poprawne
+                                                    odpowiedzi
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Options */}
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: "1rem",
+                                                marginBottom: "2rem",
+                                            }}
+                                        >
+                                            {currentQ.options.map(
+                                                (option, index) => {
+                                                    const isSelected =
+                                                        selectedAnswers.includes(
+                                                            index,
+                                                        );
+                                                    const showCorrect =
+                                                        answered &&
+                                                        isCorrectAnswer(index);
+                                                    const showWrong =
+                                                        answered &&
+                                                        isSelected &&
+                                                        !isCorrectAnswer(index);
+
+                                                    let backgroundColor =
+                                                        "#f9fafb";
+                                                    let borderColor = "#e5e7eb";
+                                                    let className =
+                                                        "option-button";
+
+                                                    if (showCorrect) {
+                                                        backgroundColor =
+                                                            "#f0fdf4";
+                                                        borderColor = "#22c55e";
+                                                        className +=
+                                                            " correct-answer";
+                                                    } else if (showWrong) {
+                                                        backgroundColor =
+                                                            "#fef2f2";
+                                                        borderColor = "#ef4444";
+                                                    } else if (
+                                                        isSelected &&
+                                                        !answered
+                                                    ) {
+                                                        backgroundColor =
+                                                            "#f3e8ff";
+                                                        borderColor = "#a855f7";
+                                                    }
+
+                                                    return (
+                                                        <button
+                                                            key={index}
+                                                            onClick={() =>
+                                                                handleAnswer(
+                                                                    index,
+                                                                )
+                                                            }
+                                                            disabled={answered}
+                                                            className={
+                                                                className
+                                                            }
+                                                            style={{
+                                                                width: "100%",
+                                                                padding:
+                                                                    "1.25rem",
+                                                                borderRadius:
+                                                                    "1rem",
+                                                                textAlign:
+                                                                    "left",
+                                                                fontWeight:
+                                                                    "500",
+                                                                border: `2px solid ${borderColor}`,
+                                                                background:
+                                                                    backgroundColor,
+                                                                cursor: answered
+                                                                    ? "default"
+                                                                    : "pointer",
+                                                                opacity:
+                                                                    answered &&
+                                                                    !isSelected &&
+                                                                    !isCorrectAnswer(
+                                                                        index,
+                                                                    )
+                                                                        ? "0.5"
+                                                                        : "1",
+                                                                animationDelay: `${index * 0.1}s`,
+                                                            }}
+                                                        >
+                                                            <div
+                                                                style={{
+                                                                    display:
+                                                                        "flex",
+                                                                    alignItems:
+                                                                        "center",
+                                                                    justifyContent:
+                                                                        "space-between",
+                                                                }}
+                                                            >
+                                                                <div
+                                                                    style={{
+                                                                        display:
+                                                                            "flex",
+                                                                        alignItems:
+                                                                            "center",
+                                                                        flex: 1,
+                                                                    }}
+                                                                >
+                                                                    {isMultiple &&
+                                                                        !answered && (
+                                                                            <div
+                                                                                className={`checkbox-custom ${isSelected ? "checked" : ""}`}
+                                                                            />
+                                                                        )}
+                                                                    <span
+                                                                        style={{
+                                                                            fontSize:
+                                                                                "1.125rem",
+                                                                        }}
+                                                                    >
+                                                                        {option}
+                                                                    </span>
+                                                                </div>
+                                                                {showCorrect && (
+                                                                    <CheckCircle
+                                                                        size={
+                                                                            28
+                                                                        }
+                                                                        style={{
+                                                                            color: "#16a34a",
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                                {showWrong && (
+                                                                    <XCircle
+                                                                        size={
+                                                                            28
+                                                                        }
+                                                                        style={{
+                                                                            color: "#dc2626",
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                },
+                                            )}
+                                        </div>
+
+                                        {/* Explanation */}
+                                        {answered && (
+                                            <div
+                                                className="explanation-box"
+                                                style={{
+                                                    background: userAnswers[
+                                                        userAnswers.length - 1
+                                                    ]?.correct
+                                                        ? "#ecfdf5"
+                                                        : "#fff7ed",
+                                                    border: `2px solid ${userAnswers[userAnswers.length - 1]?.correct ? "#86efac" : "#fdba74"}`,
+                                                    borderRadius: "1rem",
+                                                    padding: "1.5rem",
+                                                    marginBottom: "2rem",
+                                                }}
+                                            >
+                                                <h3
+                                                    style={{
+                                                        fontSize: "1.125rem",
+                                                        fontWeight: "bold",
+                                                        marginBottom: "0.75rem",
+                                                        color: userAnswers[
+                                                            userAnswers.length -
+                                                                1
+                                                        ]?.correct
+                                                            ? "#166534"
+                                                            : "#9a3412",
+                                                        fontFamily:
+                                                            "'Playfair Display', serif",
+                                                    }}
+                                                >
+                                                    {userAnswers[
+                                                        userAnswers.length - 1
+                                                    ]?.correct
+                                                        ? "✓ Brawo!"
+                                                        : "ℹ️ Wyjaśnienie"}
+                                                </h3>
+                                                <p
+                                                    style={{
+                                                        fontSize: "1rem",
+                                                        lineHeight: "1.75",
+                                                        color: "#374151",
+                                                    }}
+                                                >
+                                                    {currentQ.explanation}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Submit/Next Button */}
+                                        {!answered ? (
+                                            <button
+                                                onClick={submitAnswer}
+                                                disabled={
+                                                    selectedAnswers.length ===
+                                                        0 ||
+                                                    (isMultiple &&
+                                                        selectedAnswers.length !==
+                                                            2)
+                                                }
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "1rem 1.5rem",
+                                                    background:
+                                                        selectedAnswers.length ===
+                                                            0 ||
+                                                        (isMultiple &&
+                                                            selectedAnswers.length !==
+                                                                2)
+                                                            ? "#cbd5e1"
+                                                            : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                    color: "white",
+                                                    borderRadius: "1rem",
+                                                    fontWeight: "bold",
+                                                    fontSize: "1.125rem",
+                                                    border: "none",
+                                                    cursor:
+                                                        selectedAnswers.length ===
+                                                            0 ||
+                                                        (isMultiple &&
+                                                            selectedAnswers.length !==
+                                                                2)
+                                                            ? "not-allowed"
+                                                            : "pointer",
+                                                    transition: "all 0.3s",
+                                                    opacity:
+                                                        selectedAnswers.length ===
+                                                            0 ||
+                                                        (isMultiple &&
+                                                            selectedAnswers.length !==
+                                                                2)
+                                                            ? "0.5"
+                                                            : "1",
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    if (
+                                                        !(
+                                                            selectedAnswers.length ===
+                                                                0 ||
+                                                            (isMultiple &&
+                                                                selectedAnswers.length !==
+                                                                    2)
+                                                        )
+                                                    ) {
+                                                        e.currentTarget.style.transform =
+                                                            "scale(1.05)";
+                                                        e.currentTarget.style.boxShadow =
+                                                            "0 20px 25px -5px rgba(0, 0, 0, 0.1)";
+                                                    }
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.transform =
+                                                        "scale(1)";
+                                                    e.currentTarget.style.boxShadow =
+                                                        "none";
+                                                }}
+                                            >
+                                                Sprawdź odpowiedź
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={nextQuestion}
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "1rem 1.5rem",
+                                                    background:
+                                                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                    color: "white",
+                                                    borderRadius: "1rem",
+                                                    fontWeight: "bold",
+                                                    fontSize: "1.125rem",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    transition: "all 0.3s",
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.currentTarget.style.transform =
+                                                        "scale(1.05)";
+                                                    e.currentTarget.style.boxShadow =
+                                                        "0 20px 25px -5px rgba(0, 0, 0, 0.1)";
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.transform =
+                                                        "scale(1)";
+                                                    e.currentTarget.style.boxShadow =
+                                                        "none";
+                                                }}
+                                            >
+                                                {currentQuestion <
+                                                questions.length - 1
+                                                    ? "Następne pytanie →"
+                                                    : "Zobacz wyniki →"}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div
+                                    className="result-card"
+                                    style={{
+                                        background: "white",
+                                        borderRadius: "1.5rem",
+                                        boxShadow:
+                                            "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                                        padding: "3rem 2rem",
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    <div style={{ marginBottom: "2rem" }}>
+                                        <div
+                                            style={{
+                                                display: "inline-block",
+                                                padding: "1.5rem",
+                                                background:
+                                                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                borderRadius: "9999px",
+                                                marginBottom: "1.5rem",
+                                            }}
+                                        >
+                                            <Award
+                                                size={80}
+                                                strokeWidth={1.5}
+                                                style={{ color: "white" }}
+                                            />
+                                        </div>
+                                        <h2
+                                            style={{
+                                                fontSize:
+                                                    "clamp(2.25rem, 5vw, 3rem)",
+                                                fontWeight: "bold",
+                                                marginBottom: "1rem",
+                                                color: "#1f2937",
+                                                fontFamily:
+                                                    "'Playfair Display', serif",
+                                            }}
+                                        >
+                                            Gratulacje!
+                                        </h2>
+                                        <p
+                                            style={{
+                                                fontSize: "3.75rem",
+                                                marginBottom: "1rem",
+                                            }}
+                                        >
+                                            {getScoreMessage().emoji}
+                                        </p>
+                                        <p
+                                            style={{
+                                                fontSize: "1.5rem",
+                                                color: "#374151",
+                                                marginBottom: "1.5rem",
+                                            }}
+                                        >
+                                            {getScoreMessage().text}
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            background:
+                                                "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
+                                            borderRadius: "1rem",
+                                            padding: "2rem",
+                                            marginBottom: "2rem",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                fontSize: "3.75rem",
+                                                fontWeight: "bold",
+                                                marginBottom: "0.5rem",
+                                                color: "#7c3aed",
+                                                fontFamily:
+                                                    "'Playfair Display', serif",
+                                            }}
+                                        >
+                                            {score}/{questions.length}
+                                        </div>
+                                        <p
+                                            style={{
+                                                fontSize: "1.125rem",
+                                                color: "#374151",
+                                            }}
+                                        >
+                                            Poprawnych odpowiedzi
+                                        </p>
+                                        <div
+                                            style={{
+                                                marginTop: "1rem",
+                                                fontSize: "1.875rem",
+                                                fontWeight: "bold",
+                                                color: "#6d28d9",
+                                                fontFamily:
+                                                    "'Playfair Display', serif",
+                                            }}
+                                        >
+                                            {(
+                                                (score / questions.length) *
+                                                100
+                                            ).toFixed(0)}
+                                            %
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={restartQuiz}
+                                        style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "0.75rem",
+                                            padding: "1rem 2rem",
+                                            background:
+                                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                            color: "white",
+                                            borderRadius: "1rem",
+                                            fontWeight: "bold",
+                                            fontSize: "1.125rem",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            transition: "all 0.3s",
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.transform =
+                                                "scale(1.05)";
+                                            e.currentTarget.style.boxShadow =
+                                                "0 20px 25px -5px rgba(0, 0, 0, 0.1)";
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.transform =
+                                                "scale(1)";
+                                            e.currentTarget.style.boxShadow =
+                                                "none";
+                                        }}
+                                    >
+                                        <RefreshCw size={24} />
+                                        Spróbuj ponownie
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Footer */}
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    marginTop: "2rem",
+                                    color: "#e0e7ff",
+                                }}
+                            >
+                                <p style={{ fontSize: "0.875rem" }}>
+                                    🧠 Psychologia Osobowości - Poziom
+                                    Zaawansowany
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            ReactDOM.render(
+                <PsychologyQuiz />,
+                document.getElementById("root"),
+            );
+        </script>
+    </body>
+</html>
