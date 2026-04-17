@@ -262,8 +262,8 @@ void onMessage(const uint8_t *data, size_t len) {
     handleVcsecReply(msg);
   else if (from == UniversalMessage_Domain_DOMAIN_INFOTAINMENT)
     handleInfotainmentReply(msg);
-  else
-    log_w("Unroutable reply (from tag=%u)", msg.from_destination.which_sub_destination);
+  else if (msg.which_payload == UniversalMessage_RoutableMessage_protobuf_message_as_bytes_tag)
+    handleVcsecReply(msg);  // pairing responses use routing_address not domain
 }
 
 void onTransportConnection(bool up) {
