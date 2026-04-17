@@ -6,16 +6,16 @@ namespace cfg {
 
 constexpr const char *kFwName       = "Tesla BLE Bridge";
 constexpr const char *kFwVersion    = "0.1.0";
-constexpr const char *kManufacturer = "ESP32-S3";
-constexpr const char *kModel        = "XIAO-S3-TeslaBLE";
+constexpr const char *kManufacturer = "ESP32-C6";
+constexpr const char *kModel        = "XIAO-C6-TeslaBLE";
 
 // Default HomeKit pairing code used on first boot. User can override via
 // the HomeSpan 'S' CLI command.
 constexpr const char *kDefaultSetupCode = "46637726";
 constexpr const char *kDefaultSetupId   = "TSLA";
 
-// Xiao ESP32-S3 built-in LED (active LOW on most revisions).
-constexpr int kLedPin        = 21;
+// Xiao ESP32-C6 built-in LED (active LOW on most revisions).
+constexpr int kLedPin        = 15;
 constexpr bool kLedActiveLow = true;
 
 // BOOT button — re-used as factory-reset trigger (hold ~5s).
