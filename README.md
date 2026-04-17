@@ -155,9 +155,10 @@ pio run -t upload        # flash over USB-C
 pio device monitor       # serial console @ 115200
 ```
 
-The official `espressif32` PlatformIO platform is used at version 6.x+ which
-ships Arduino-ESP32 3.x on IDF 5.x (mbedTLS 3.x), satisfying both the Tesla
-BLE library and HomeSpan's ≥ 3.3.0 requirement.
+The `pioarduino/platform-espressif32` fork is used because the official
+Espressif platform does not include the `seeed_xiao_esp32c6` board definition.
+Pioarduino ships Arduino-ESP32 3.x on IDF 5.x (mbedTLS 3.x), satisfying both
+the Tesla BLE library and HomeSpan's ≥ 3.3.0 requirement.
 
 ## Security notes
 
