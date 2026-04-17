@@ -2,14 +2,12 @@
 //
 // On first boot:
 //   1. A NIST-P256 key pair is generated and persisted to NVS.
-//   2. The user enters the vehicle's 17-char VIN via the HomeSpan Serial CLI
-//      command `V <vin>` (Wi-Fi credentials are also configured via HomeSpan's
-//      own AP-mode web flow — the device advertises "Tesla BLE Bridge-Setup").
-//   3. After the user issues `P`, the ESP32 scans for the vehicle (matches by
-//      the VIN hash in the advertised local name), connects, and sends an
-//      `add-key-request` over BLE. The Tesla center console shows "Tap your
-//      key card to approve" — when the owner taps, the vehicle whitelists
-//      the ESP32 and the firmware stores `paired=true`.
+//   2. The device connects automatically to the hardcoded Wi-Fi network and
+//      applies the hardcoded VIN (both defined in config.h).
+//   3. Issue `@P` over Serial to pair: the ESP32 scans for the vehicle,
+//      connects, and sends an `add-key-request` over BLE. The Tesla center
+//      console shows "Tap your key card to approve" — when the owner taps,
+//      the vehicle whitelists the ESP32 and the firmware stores `paired=true`.
 //
 // Steady-state:
 //   * BLE session handshake runs per domain (VCSEC + Infotainment).
@@ -31,30 +29,21 @@
 
 namespace {
 
+static bool s_pairOnConnect = false;
+
 // --- HomeSpan CLI command handlers ------------------------------------------
 
-void cmdSetVin(const char *args) {
-  while (*args == ' ') ++args;
-  String vin(args);
-  vin.trim();
-  vin.toUpperCase();
-  if (vin.length() != 17) {
-    Serial.printf("VIN must be exactly 17 characters (got %u)\n", vin.length());
-    return;
-  }
-  storage::setVin(vin);
-  tesla_client::setVin(vin);
-  Serial.printf("VIN set to %s — restart pairing with 'P'\n", vin.c_str());
-}
-
-void cmdStartPair(const char *) {
-  if (!tesla_transport::isReady()) {
-    Serial.println("Not connected to the vehicle yet. Is it in BLE range?");
+void cmdPair(const char *) {
+  storage::setVin(cfg::kVin);
+  tesla_client::setVin(String(cfg::kVin));
+  if (tesla_transport::isReady()) {
+    tesla_client::startPairing();
+    Serial.println("Pairing started. Tap your Tesla key card on the center console when prompted.");
+  } else {
+    s_pairOnConnect = true;
     tesla_transport::requestConnect();
-    return;
+    Serial.println("Connecting to vehicle — pairing will start automatically when in range.");
   }
-  tesla_client::startPairing();
-  Serial.println("Pairing requested. Tap your Tesla key card on the center console when prompted.");
 }
 
 void cmdInfo(const char *) {
@@ -86,8 +75,15 @@ void onWifiConnected() {
   Serial.println("Wi-Fi connected — starting BLE transport and Tesla client.");
   tesla_transport::begin();
   tesla_client::begin();
-  const String vin = storage::getVin();
-  if (vin.length() == 17) tesla_client::setVin(vin);
+  storage::setVin(cfg::kVin);
+  tesla_client::setVin(String(cfg::kVin));
+  tesla_transport::setOnConnection([](bool connected) {
+    if (connected && s_pairOnConnect) {
+      s_pairOnConnect = false;
+      tesla_client::startPairing();
+      Serial.println("Vehicle in range — pairing started. Tap your Tesla key card on the center console.");
+    }
+  });
   tesla_client::onStateChanged([]() { hk::refreshFromVehicle(); });
   tesla_client::onPairingProgress([](tesla_client::PairStage stage, const char *msg) {
     Serial.printf("[pair] %d: %s\n", (int)stage, msg ? msg : "");
@@ -112,12 +108,12 @@ void setup() {
   homeSpan.enableOTA();
   homeSpan.setPairingCode(cfg::kDefaultSetupCode);
   homeSpan.setQRID(cfg::kDefaultSetupId);
+  homeSpan.setWifiCredentials(cfg::kWifiSsid, cfg::kWifiPass);
   homeSpan.setWifiCallback(onWifiConnected);
 
-  new SpanUserCommand('V', "<vin> - set the vehicle VIN (17 chars)", cmdSetVin);
-  new SpanUserCommand('P', "       - send add-key-request; tap Tesla card when prompted", cmdStartPair);
-  new SpanUserCommand('I', "       - print Tesla bridge status", cmdInfo);
-  new SpanUserCommand('Z', "       - factory reset (erase NVS and reboot)", cmdFactoryReset);
+  new SpanUserCommand('P', "- pair to vehicle (connect + tap Tesla card when prompted)", cmdPair);
+  new SpanUserCommand('I', "- print Tesla bridge status", cmdInfo);
+  new SpanUserCommand('Z', "- factory reset (erase NVS and reboot)", cmdFactoryReset);
 
   homeSpan.begin(Category::Bridges, "Tesla BLE Bridge");
   hk::buildAccessories();

@@ -9,6 +9,11 @@ constexpr const char *kFwVersion    = "0.1.0";
 constexpr const char *kManufacturer = "ESP32-S3";
 constexpr const char *kModel        = "XIAO-S3-TeslaBLE";
 
+// Hardcoded vehicle and network credentials.
+constexpr const char *kVin      = "7SAXCCE55PF393875";
+constexpr const char *kWifiSsid = "Gwiezdny Jagi";
+constexpr const char *kWifiPass = "Comhom-6xashi-fexgar";
+
 // Default HomeKit pairing code used on first boot. User can override via
 // the HomeSpan 'S' CLI command.
 constexpr const char *kDefaultSetupCode = "46637726";
