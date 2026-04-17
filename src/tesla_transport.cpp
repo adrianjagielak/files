@@ -54,6 +54,7 @@ class ScanCb : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice *adv) override {
     if (!adv->haveName()) return;
     const std::string name = adv->getName();
+    Serial.printf("[BLE] Seen: %s\n", name.c_str());
     if (!TeslaBLE::matches_vin(name, g_vin.c_str())) return;
     Serial.printf("[BLE] Vehicle found: %s (%s)\n", name.c_str(), adv->getAddress().toString().c_str());
     g_found_device = *adv;
