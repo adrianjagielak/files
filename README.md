@@ -155,9 +155,9 @@ pio run -t upload        # flash over USB-C
 pio device monitor       # serial console @ 115200
 ```
 
-The `pioarduino/platform-espressif32` fork is used because the stock
-Espressif platform still ships Arduino-ESP32 v2.x (IDF 4.x, mbedTLS 2.x);
-the Tesla protocol requires mbedTLS 3.x, present only in IDF 5.x.
+The official `espressif32` PlatformIO platform is used at version 6.x+ which
+ships Arduino-ESP32 3.x on IDF 5.x (mbedTLS 3.x), satisfying both the Tesla
+BLE library and HomeSpan's ≥ 3.3.0 requirement.
 
 ## Security notes
 
