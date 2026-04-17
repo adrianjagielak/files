@@ -62,16 +62,11 @@ void connectTask(void *) {
   }
 
   // Dump everything the car exposes so we can see the real UUIDs.
-  auto *services = g_client->getServices(true);
-  if (services) {
-    for (auto *s : *services) {
-      Serial.printf("[BLE] SVC %s\n", s->getUUID().toString().c_str());
-      auto *chars = s->getCharacteristics(true);
-      if (chars) {
-        for (auto *c : *chars)
-          Serial.printf("[BLE]   CHR %s\n", c->getUUID().toString().c_str());
-      }
-    }
+  auto &services = g_client->getServices(true);
+  for (auto *s : services) {
+    Serial.printf("[BLE] SVC %s\n", s->getUUID().toString().c_str());
+    for (auto *c : s->getCharacteristics(true))
+      Serial.printf("[BLE]   CHR %s\n", c->getUUID().toString().c_str());
   }
 
   NimBLERemoteService *svc = g_client->getService(kSvcUuid);
