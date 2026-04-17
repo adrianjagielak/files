@@ -61,15 +61,11 @@ void connectTask(void *) {
     return;
   }
 
-  // Dump everything the car exposes so we can see the real UUIDs.
-  auto &services = g_client->getServices(true);
-  for (auto *s : services) {
-    Serial.printf("[BLE] SVC %s\n", s->getUUID().toString().c_str());
-    for (auto *c : s->getCharacteristics(true))
-      Serial.printf("[BLE]   CHR %s\n", c->getUUID().toString().c_str());
+  // Discover all services+characteristics in one pass; iterate to find ours.
+  NimBLERemoteService *svc = nullptr;
+  for (auto *s : g_client->getServices(true)) {
+    if (s->getUUID() == kSvcUuid) { svc = s; break; }
   }
-
-  NimBLERemoteService *svc = g_client->getService(kSvcUuid);
   if (!svc) {
     Serial.println("[BLE] Tesla service not found");
     g_client->disconnect();
@@ -77,12 +73,12 @@ void connectTask(void *) {
     vTaskDelete(nullptr);
     return;
   }
-
-  g_tx = svc->getCharacteristic(kTxUuid);
-  g_rx = svc->getCharacteristic(kRxUuid);
+  for (auto *c : svc->getCharacteristics()) {
+    if (c->getUUID() == kTxUuid) g_tx = c;
+    if (c->getUUID() == kRxUuid) g_rx = c;
+  }
   if (!g_tx || !g_rx) {
-    Serial.printf("[BLE] TX/RX missing (tx=%p rx=%p) — see SVC/CHR dump above\n",
-                  (void *)g_tx, (void *)g_rx);
+    Serial.println("[BLE] Tesla TX/RX characteristics missing");
     g_client->disconnect();
     g_state = State::Idle;
     vTaskDelete(nullptr);
