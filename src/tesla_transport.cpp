@@ -42,6 +42,10 @@ size_t g_reasm_expected = 0;
 
 uint32_t g_last_attempt_ms = 0;
 
+// Set by onScanEnd when a device is found; tryConnect() is called from loop()
+// so it runs on the main task, not the NimBLE host task.
+std::atomic<bool> g_connect_pending{false};
+
 // Forward decls.
 void startScan();
 void tryConnect();
@@ -63,7 +67,7 @@ class ScanCb : public NimBLEScanCallbacks {
   }
   void onScanEnd(const NimBLEScanResults & /*res*/, int /*reason*/) override {
     if (g_device_found) {
-      tryConnect();
+      g_connect_pending = true;  // connect from main loop, not NimBLE host task
     } else if (g_state == State::Scanning) {
       Serial.printf("[BLE] Scan done — vehicle not found (is it awake?), retrying in %u s\n",
                     cfg::kConnectRetryMs / 1000);
@@ -135,6 +139,7 @@ void startScan() {
 void tryConnect() {
   if (!g_device_found) return;
   g_state = State::Connecting;
+  Serial.printf("[BLE] Connecting to %s...\n", g_found_device.getAddress().toString().c_str());
   if (!g_client) {
     g_client = NimBLEDevice::createClient();
     g_client->setClientCallbacks(&g_client_cb, /*deleteCallbacks=*/false);
@@ -142,28 +147,30 @@ void tryConnect() {
     g_client->setConnectTimeout(5'000);
   }
   if (!g_client->connect(&g_found_device, /*deleteAttributes=*/true)) {
-    log_w("BLE connect failed");
+    Serial.println("[BLE] Connect failed — will retry");
     g_state = State::Idle;
     return;
   }
   g_state = State::Discovering;
   NimBLERemoteService *svc = g_client->getService(kSvcUuid);
   if (!svc) {
-    log_e("Tesla service not found");
+    Serial.println("[BLE] Tesla service not found on device");
     g_client->disconnect();
+    g_state = State::Idle;
     return;
   }
   g_tx = svc->getCharacteristic(kTxUuid);
   g_rx = svc->getCharacteristic(kRxUuid);
   if (!g_tx || !g_rx) {
-    log_e("Tesla TX/RX characteristics missing");
+    Serial.println("[BLE] Tesla TX/RX characteristics missing");
     g_client->disconnect();
+    g_state = State::Idle;
     return;
   }
-  // Subscribe for indications (Tesla uses confirmed notifications).
   if (!g_rx->subscribe(/*notifications=*/false, onRxNotify, /*response=*/true)) {
-    log_e("Failed to subscribe to RX characteristic");
+    Serial.println("[BLE] Failed to subscribe to RX characteristic");
     g_client->disconnect();
+    g_state = State::Idle;
     return;
   }
   g_state = State::Ready;
@@ -231,6 +238,8 @@ bool sendMessage(const uint8_t *data, size_t len) {
 
 void loop() {
   if (!g_rx_queue) return;
+  // Connect from main task (not NimBLE host task) to avoid deadlocks.
+  if (g_connect_pending.exchange(false)) tryConnect();
   // Drain RX queue.
   std::vector<uint8_t> *msg = nullptr;
   while (xQueueReceive(g_rx_queue, &msg, 0) == pdTRUE) {
