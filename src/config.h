@@ -42,7 +42,7 @@ constexpr int kBootButtonPin = 0;
 constexpr uint32_t kBodyStatePollMs   = 10'000;   // VCSEC body status (cheap, does not wake).
 constexpr uint32_t kVehicleDataMs     = 30'000;   // Infotainment polling when awake.
 constexpr uint32_t kVehicleDataFastMs = 10'000;   // While charging / active.
-constexpr uint32_t kConnectRetryMs    = 15'000;
+constexpr uint32_t kConnectRetryMs    = 5'000;
 constexpr uint32_t kCommandTimeoutMs  = 5'000;
 
 // Max protobuf sizes. Match generated .options values.

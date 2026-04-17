@@ -55,7 +55,7 @@ class ScanCb : public NimBLEScanCallbacks {
     if (!adv->haveName()) return;
     const std::string name = adv->getName();
     if (!TeslaBLE::matches_vin(name, g_vin.c_str())) return;
-    log_i("Tesla vehicle found: %s (%s)", name.c_str(), adv->getAddress().toString().c_str());
+    Serial.printf("[BLE] Vehicle found: %s (%s)\n", name.c_str(), adv->getAddress().toString().c_str());
     g_found_device = *adv;
     g_device_found = true;
     NimBLEDevice::getScan()->stop();
@@ -64,7 +64,8 @@ class ScanCb : public NimBLEScanCallbacks {
     if (g_device_found) {
       tryConnect();
     } else if (g_state == State::Scanning) {
-      log_w("Scan ended without finding vehicle; retry in %u ms", cfg::kConnectRetryMs);
+      Serial.printf("[BLE] Scan done — vehicle not found (is it awake?), retrying in %u s\n",
+                    cfg::kConnectRetryMs / 1000);
       g_state = State::Idle;
     }
   }
@@ -126,8 +127,8 @@ void startScan() {
   scan->setActiveScan(true);
   scan->setInterval(100);
   scan->setWindow(80);
-  scan->start(10'000, /*is_continue=*/false, /*restart=*/true);
-  log_i("Scanning for Tesla matching VIN %s", g_vin.c_str());
+  scan->start(20'000, /*is_continue=*/false, /*restart=*/false);
+  Serial.printf("[BLE] Scanning 20 s for Tesla VIN %s (wake the car first if asleep)\n", g_vin.c_str());
 }
 
 void tryConnect() {
@@ -166,7 +167,7 @@ void tryConnect() {
   }
   g_state = State::Ready;
   g_conn_event.fetch_add(1);
-  log_i("Tesla BLE link ready (mtu=%u)", g_client->getMTU());
+  Serial.printf("[BLE] Link ready (mtu=%u) — starting session handshake\n", g_client->getMTU());
 }
 
 }  // namespace
