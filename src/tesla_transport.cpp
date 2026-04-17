@@ -28,11 +28,8 @@ NimBLEAdvertisedDevice      g_found_device;
 enum class State { Idle, Scanning, Connecting, Ready };
 std::atomic<State> g_state{State::Idle};
 
-QueueHandle_t       g_rx_queue   = nullptr;
-std::atomic<int>    g_conn_event{0};
-
-std::vector<uint8_t> g_reasm;
-size_t               g_reasm_expected = 0;
+QueueHandle_t    g_rx_queue   = nullptr;
+std::atomic<int> g_conn_event{0};
 
 uint32_t g_last_scan_ms = 0;
 
@@ -40,7 +37,6 @@ uint32_t g_last_scan_ms = 0;
 // Connect task — runs on its own stack, completely outside NimBLE callbacks.
 // ---------------------------------------------------------------------------
 void connectTask(void *) {
-  // Wait until the scanner has fully stopped.
   NimBLEScan *scan = NimBLEDevice::getScan();
   for (int i = 0; i < 40 && scan->isScanning(); ++i)
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -50,6 +46,7 @@ void connectTask(void *) {
 
   if (!g_client) {
     g_client = NimBLEDevice::createClient();
+    g_client->setClientCallbacks(&g_client_cb, /*deleteOnDisconnect=*/false);
     g_client->setConnectionParams(12, 24, 0, 400);
     g_client->setConnectTimeout(8'000);
   }
@@ -61,7 +58,6 @@ void connectTask(void *) {
     return;
   }
 
-  // Discover all services+characteristics in one pass; iterate to find ours.
   NimBLERemoteService *svc = nullptr;
   for (auto *s : g_client->getServices(true)) {
     if (s->getUUID() == kSvcUuid) { svc = s; break; }
@@ -85,22 +81,10 @@ void connectTask(void *) {
     return;
   }
 
+  // Pass raw notification bytes directly to the queue — Vehicle handles reassembly.
   auto rxCb = [](NimBLERemoteCharacteristic *, uint8_t *data, size_t len, bool) {
-    size_t offset = 0;
-    if (g_reasm_expected == 0) {
-      if (len < 2) return;
-      g_reasm_expected = (size_t(data[0]) << 8) | data[1];
-      offset = 2;
-      g_reasm.clear();
-      g_reasm.reserve(g_reasm_expected);
-    }
-    g_reasm.insert(g_reasm.end(), data + offset, data + len);
-    if (g_reasm.size() >= g_reasm_expected) {
-      auto *copy = new std::vector<uint8_t>(std::move(g_reasm));
-      if (xQueueSend(g_rx_queue, &copy, 0) != pdTRUE) delete copy;
-      g_reasm.clear();
-      g_reasm_expected = 0;
-    }
+    auto *copy = new std::vector<uint8_t>(data, data + len);
+    if (xQueueSend(g_rx_queue, &copy, 0) != pdTRUE) delete copy;
   };
 
   if (!g_rx->subscribe(/*notifications=*/false, rxCb, /*response=*/true)) {
@@ -148,8 +132,6 @@ class ClientCb : public NimBLEClientCallbacks {
     Serial.printf("[BLE] Disconnected (reason=%d) — rescanning\n", reason);
     g_tx = nullptr;
     g_rx = nullptr;
-    g_reasm.clear();
-    g_reasm_expected = 0;
     g_state = State::Idle;
     g_conn_event.fetch_sub(1);
   }
@@ -164,15 +146,11 @@ ClientCb g_client_cb;
 // Public API
 // ---------------------------------------------------------------------------
 void begin() {
-  g_rx_queue = xQueueCreate(8, sizeof(std::vector<uint8_t> *));
+  g_rx_queue = xQueueCreate(32, sizeof(std::vector<uint8_t> *));
   NimBLEDevice::init("TeslaBLE-Bridge");
   NimBLEDevice::setPower(3);
   NimBLEDevice::setMTU(517);
   NimBLEDevice::getScan()->setScanCallbacks(&g_scan_cb, false);
-
-  // Register disconnect callback via a dummy client holder.
-  // (ClientCb is set per-client in connectTask; we store it globally so it
-  //  persists across reconnects without heap-allocating each time.)
 }
 
 void setVin(const String &vin) { g_vin = vin; }
@@ -201,18 +179,15 @@ void disconnect() {
   if (g_client && g_client->isConnected()) g_client->disconnect();
 }
 
+// Data must already contain the 2-byte length prefix (as produced by the
+// TeslaBLE build_* functions via prepend_length). We just chunk and write.
 bool sendMessage(const uint8_t *data, size_t len) {
-  if (!isReady() || !g_tx || len == 0 || len > 1024) return false;
+  if (!isReady() || !g_tx || len == 0 || len > 2048) return false;
   const uint16_t mtu   = g_client->getMTU();
   const size_t   chunk = (mtu > 3) ? (mtu - 3) : 20;
-  std::vector<uint8_t> framed;
-  framed.reserve(len + 2);
-  framed.push_back(uint8_t(len >> 8));
-  framed.push_back(uint8_t(len & 0xFF));
-  framed.insert(framed.end(), data, data + len);
-  for (size_t off = 0; off < framed.size(); off += chunk) {
-    const size_t n = std::min(chunk, framed.size() - off);
-    if (!g_tx->writeValue(framed.data() + off, n, true)) return false;
+  for (size_t off = 0; off < len; off += chunk) {
+    const size_t n = std::min(chunk, len - off);
+    if (!g_tx->writeValue(data + off, n, true)) return false;
   }
   return true;
 }
