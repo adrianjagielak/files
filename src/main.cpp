@@ -29,22 +29,7 @@
 
 namespace {
 
-static bool s_pairOnConnect = false;
-
 // --- HomeSpan CLI command handlers ------------------------------------------
-
-void cmdPair(const char *) {
-  storage::setVin(cfg::kVin);
-  tesla_client::setVin(String(cfg::kVin));
-  if (tesla_transport::isReady()) {
-    tesla_client::startPairing();
-    Serial.println("Pairing started. Tap your Tesla key card on the center console when prompted.");
-  } else {
-    s_pairOnConnect = true;
-    tesla_transport::requestConnect();
-    Serial.println("Connecting to vehicle — pairing will start automatically when in range.");
-  }
-}
 
 void cmdInfo(const char *) {
   const String vin = storage::getVin();
@@ -104,7 +89,6 @@ void setup() {
   homeSpan.setWifiCredentials(cfg::kWifiSsid, cfg::kWifiPass);
   homeSpan.setWifiCallback(onWifiConnected);
 
-  new SpanUserCommand('P', "- pair to vehicle (connect + tap Tesla card when prompted)", cmdPair);
   new SpanUserCommand('I', "- print Tesla bridge status", cmdInfo);
   new SpanUserCommand('Z', "- factory reset (erase NVS and reboot)", cmdFactoryReset);
 
@@ -113,13 +97,8 @@ void setup() {
 }
 
 void loop() {
-  homeSpan.poll();           // HomeKit + Wi-Fi + CLI
-  tesla_transport::loop();   // drain BLE RX queue
-  tesla_client::loop();      // handshake/poll/pair state machine
+  homeSpan.poll();
+  tesla_transport::loop();
+  tesla_client::loop();
   led::loop();
-  if (s_pairOnConnect && tesla_transport::isReady()) {
-    s_pairOnConnect = false;
-    tesla_client::startPairing();
-    Serial.println("Vehicle in range — pairing started. Tap your Tesla key card on the center console.");
-  }
 }

@@ -268,15 +268,18 @@ void onMessage(const uint8_t *data, size_t len) {
 
 void onTransportConnection(bool up) {
   if (up) {
-    log_i("Transport connected — starting handshake");
-    // Always re-run the handshake after (re)connection.
-    g_vcsec_session_ready = false;
+    g_vcsec_session_ready    = false;
     g_infotain_session_ready = false;
-    g_vcsec_handshake_ms = millis();
-    requestSessionInfo(UniversalMessage_Domain_DOMAIN_VEHICLE_SECURITY);
+    g_vcsec_handshake_ms     = millis();
+    if (!g_paired) {
+      Serial.println("Not paired — sending key request. Tap your Tesla key card on the center console.");
+      startPairing();
+    } else {
+      requestSessionInfo(UniversalMessage_Domain_DOMAIN_VEHICLE_SECURITY);
+    }
   } else {
-    log_w("Transport disconnected");
-    g_vcsec_session_ready = false;
+    Serial.println("BLE disconnected.");
+    g_vcsec_session_ready    = false;
     g_infotain_session_ready = false;
   }
 }
