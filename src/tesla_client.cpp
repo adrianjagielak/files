@@ -435,8 +435,9 @@ void loop() {
   tesla_transport::requestConnect();
   if (!tesla_transport::isReady()) return;
 
-  // 2. Pairing retry (whitelist WAIT reply → re-send every few seconds).
-  if (g_pair_stage == PairStage::WaitingForTap && (int32_t)(now - g_pair_next_ms) >= 0) {
+  // 2. Pairing retry — keep sending whitelist until the car ACKs (WAIT) or OKs.
+  if ((g_pair_stage == PairStage::Sending || g_pair_stage == PairStage::WaitingForTap) &&
+      (int32_t)(now - g_pair_next_ms) >= 0) {
     sendWhitelistMessage();
     g_pair_next_ms = now + 4000;
   }
