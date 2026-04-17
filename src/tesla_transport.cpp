@@ -73,7 +73,7 @@ void connectTask(void *) {
     vTaskDelete(nullptr);
     return;
   }
-  for (auto *c : svc->getCharacteristics()) {
+  for (auto *c : svc->getCharacteristics(true)) {
     if (c->getUUID() == kTxUuid) g_tx = c;
     if (c->getUUID() == kRxUuid) g_rx = c;
   }
