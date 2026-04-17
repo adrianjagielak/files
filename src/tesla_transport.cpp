@@ -228,6 +228,7 @@ bool sendMessage(const uint8_t *data, size_t len) {
 }
 
 void loop() {
+  if (!g_rx_queue) return;
   // Drain RX queue.
   std::vector<uint8_t> *msg = nullptr;
   while (xQueueReceive(g_rx_queue, &msg, 0) == pdTRUE) {
