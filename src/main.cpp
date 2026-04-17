@@ -82,8 +82,7 @@ void cmdFactoryReset(const char *) {
   ESP.restart();
 }
 
-void onWifiConnected(int count) {
-  (void)count;
+void onWifiConnected() {
   Serial.println("Wi-Fi connected — starting BLE transport and Tesla client.");
   tesla_transport::begin();
   tesla_client::begin();
