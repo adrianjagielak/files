@@ -63,12 +63,11 @@ class ScanCb : public NimBLEScanCallbacks {
     Serial.printf("[BLE] Vehicle found: %s (%s)\n", name.c_str(), adv->getAddress().toString().c_str());
     g_found_device = *adv;
     g_device_found = true;
+    g_connect_pending = true;  // signal main loop to connect (safe from callback context)
     NimBLEDevice::getScan()->stop();
   }
   void onScanEnd(const NimBLEScanResults & /*res*/, int /*reason*/) override {
-    if (g_device_found) {
-      g_connect_pending = true;  // connect from main loop, not NimBLE host task
-    } else if (g_state == State::Scanning) {
+    if (!g_device_found && g_state == State::Scanning) {
       Serial.printf("[BLE] Scan done — vehicle not found (is it awake?), retrying in %u s\n",
                     cfg::kConnectRetryMs / 1000);
       g_state = State::Idle;
