@@ -1,0 +1,11 @@
+.pio/
+.vscode/
+.cache/
+build/
+dist/
+*.o
+*.obj
+*.elf
+*.bin
+*.map
+*.DS_Store

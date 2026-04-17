@@ -1,0 +1,3 @@
+[submodule "components/tesla-ble"]
+	path = components/tesla-ble
+	url = https://github.com/yoziru/tesla-ble.git
