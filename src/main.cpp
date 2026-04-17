@@ -77,13 +77,6 @@ void onWifiConnected() {
   tesla_client::begin();
   storage::setVin(cfg::kVin);
   tesla_client::setVin(String(cfg::kVin));
-  tesla_transport::setOnConnection([](bool connected) {
-    if (connected && s_pairOnConnect) {
-      s_pairOnConnect = false;
-      tesla_client::startPairing();
-      Serial.println("Vehicle in range — pairing started. Tap your Tesla key card on the center console.");
-    }
-  });
   tesla_client::onStateChanged([]() { hk::refreshFromVehicle(); });
   tesla_client::onPairingProgress([](tesla_client::PairStage stage, const char *msg) {
     Serial.printf("[pair] %d: %s\n", (int)stage, msg ? msg : "");
@@ -124,4 +117,9 @@ void loop() {
   tesla_transport::loop();   // drain BLE RX queue
   tesla_client::loop();      // handshake/poll/pair state machine
   led::loop();
+  if (s_pairOnConnect && tesla_transport::isReady()) {
+    s_pairOnConnect = false;
+    tesla_client::startPairing();
+    Serial.println("Vehicle in range — pairing started. Tap your Tesla key card on the center console.");
+  }
 }
