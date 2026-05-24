@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psychologia Różnic Indywidualnych – Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e17;
+    --surface: #1a1826;
+    --surface2: #221f35;
+    --accent: #e8a838;
+    --accent2: #c17edc;
+    --green: #52c97a;
+    --red: #e05a5a;
+    --text: #e8e4f0;
+    --muted: #8a8299;
+    --border: #2e2a45;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* decorative blobs */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(193,126,220,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px; right: -200px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(232,168,56,0.10) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e8e4f0 30%, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  .header p {
+    font-size: 15px;
+    color: var(--muted);
+    font-style: italic;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 100px;
+    transition: width 0.5s ease;
+  }
+  .progress-label {
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    letter-spacing: 0.5px;
+  }
+
+  /* SCORE */
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .score-badge span { color: var(--accent); font-weight: 600; }
+
+  /* CHAPTER LABEL */
+  .chapter-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 10px;
+  }
+
+  /* QUESTION CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 40px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(17px, 2.5vw, 21px);
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 28px;
+    color: var(--text);
+  }
+
+  /* OPTIONS */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: var(--text);
+    font-family: 'Source Serif 4', serif;
+    font-size: 15px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    line-height: 1.5;
+    position: relative;
+    overflow: hidden;
+  }
+  .option-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent2);
+    transform: translateX(4px);
+  }
+  .option-btn:hover:not(:disabled)::before { opacity: 0.06; }
+
+  .option-btn.correct {
+    border-color: var(--green);
+    background: rgba(82,201,122,0.12);
+    color: #7eefaa;
+  }
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: rgba(224,90,90,0.12);
+    color: #f09090;
+  }
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    display: inline-block;
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--border);
+    text-align: center;
+    line-height: 26px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 10px;
+    font-family: 'Playfair Display', serif;
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+  .correct .option-letter { background: rgba(82,201,122,0.3); }
+  .wrong .option-letter   { background: rgba(224,90,90,0.3); }
+
+  /* EXPLANATION */
+  .explanation {
+    margin-top: 24px;
+    background: var(--surface2);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    animation: fadeUp 0.4s ease;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation-header {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .explanation-text {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: #c8c4d8;
+  }
+  .explanation-text strong { color: var(--accent); }
+
+  /* NEXT BTN */
+  .next-btn {
+    margin-top: 28px;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none;
+    border-radius: 12px;
+    color: #0f0e17;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+    transition: opacity 0.2s, transform 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .next-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .next-btn.show { display: block; animation: fadeUp 0.3s ease; }
+
+  /* RESULT */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    text-align: center;
+    animation: fadeUp 0.5s ease;
+    display: none;
+  }
+  .result-card.show { display: block; }
+  .result-emoji { font-size: 64px; margin-bottom: 20px; }
+  .result-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .result-score {
+    font-size: 52px;
+    font-weight: 900;
+    font-family: 'Playfair Display', serif;
+    margin: 20px 0;
+    color: var(--accent);
+  }
+  .result-msg {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+    margin: 0 auto 32px;
+    font-style: italic;
+  }
+  .restart-btn {
+    padding: 14px 40px;
+    background: var(--surface2);
+    border: 1.5px solid var(--accent2);
+    border-radius: 12px;
+    color: var(--accent2);
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .restart-btn:hover { background: rgba(193,126,220,0.15); }
+
+  /* TOPIC NAV */
+  .topic-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 40px;
+    justify-content: center;
+  }
+  .topic-pill {
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+  }
+  .topic-pill:hover, .topic-pill.active {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(193,126,220,0.08);
+  }
+
+  /* START */
+  .start-screen {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .start-screen p {
+    color: var(--muted);
+    line-height: 1.8;
+    font-size: 15px;
+    max-width: 520px;
+    margin: 0 auto 20px;
+  }
+  .topic-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 32px 0;
+    text-align: left;
+  }
+  .topic-card-select {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .topic-card-select:hover, .topic-card-select.selected {
+    border-color: var(--accent2);
+    background: rgba(193,126,220,0.08);
+  }
+  .topic-card-select .num {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .topic-card-select .title {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .start-btn {
+    padding: 16px 48px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none;
+    border-radius: 14px;
+    color: #0f0e17;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+  }
+  .start-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+  
+  .header.hidden {
+    display: none;
+  }
+
+
+  @media(max-width: 600px) {
+    .card { padding: 24px 20px; }
+    .result-card { padding: 32px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="eyebrow">Materiały do nauki</div>
+    <h1>Psychologia Różnic<br>Indywidualnych</h1>
+    <p>Interaktywny quiz z objaśnieniami — odpowiedz, a dowiesz się więcej po każdym pytaniu.</p>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="start-screen card">
+    <p>Quiz obejmuje <strong>60 pytań</strong> z 6 działów. Możesz przejść cały zestaw lub wybrać konkretne tematy.</p>
+    <div class="topic-select-grid" id="topicSelectGrid"></div>
+    <div style="margin-top:8px; color:var(--muted); font-size:13px; font-style:italic;" id="selectedInfo">Zaznaczone: wszystkie tematy</div>
+    <br>
+    <button class="start-btn" onclick="startQuiz()">Rozpocznij quiz →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quizArea" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div class="score-badge">Wynik: <span id="scoreDisplay">0</span> / <span id="totalDisplay">0</span></div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">Pytanie 1 z 60</div>
+
+    <div class="card" id="questionCard">
+      <div class="chapter-label" id="chapterLabel"></div>
+      <div class="question-text" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanationBox">
+        <div class="explanation-header">💡 Objaśnienie</div>
+        <div class="explanation-text" id="explanationText"></div>
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Następne pytanie →</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-card" id="resultCard">
+    <div class="result-emoji" id="resultEmoji">🎓</div>
+    <h2>Koniec quizu!</h2>
+    <div class="result-score" id="resultScore"></div>
+    <p class="result-msg" id="resultMsg"></p>
+    <button class="restart-btn" onclick="restartQuiz()">↺ Zacznij od nowa</button>
+  </div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+
+// ══════════════════════════════════════════
+// 1. PSYCHOLOGIA RÓŻNIC INDYWIDUALNYCH
+// ══════════════════════════════════════════
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Czym zajmuje się psychologia różnic indywidualnych?",
+  options: [
+    "Badaniem wyłącznie patologii i zaburzeń psychicznych",
+    "Opisem, pomiarem i wyjaśnianiem tego, czym ludzie różnią się między sobą psychologicznie",
+    "Analizą procesów grupowych i społecznych",
+    "Badaniem wyłącznie różnic między kulturami"
+  ],
+  correct: 1,
+  explanation: "Psychologia różnic indywidualnych to dział psychologii, który <strong>opisuje, mierzy i wyjaśnia</strong> zróżnicowanie psychologiczne między jednostkami. Interesuje ją, dlaczego ludzie różnią się pod względem inteligencji, temperamentu, osobowości, stylów poznawczych czy zdolności. Nie zajmuje się patologią per se – skupia się na normalnym zakresie zróżnicowania."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Co w psychologii różnic indywidualnych oznacza pojęcie 'cecha'?",
+  options: [
+    "Chwilowy stan emocjonalny zależny od kontekstu",
+    "Względnie stała dyspozycja psychologiczna, która wyznacza charakterystyczny sposób zachowania",
+    "Jednorazowa reakcja na stresor",
+    "Wartość kulturowa zinternalizowana przez jednostkę"
+  ],
+  correct: 1,
+  explanation: "<strong>Cecha</strong> to względnie <em>stała i spójna</em> dyspozycja psychologiczna – predyspozycja do określonego sposobu myślenia, odczuwania i działania. Np. ekstrawersja jako cecha oznacza, że ktoś w wielu różnych sytuacjach będzie szukał towarzystwa, będzie towarzyski. Cechy różnią się od stanów tym, że są trwałe i widoczne w wielu kontekstach."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Czym różni się 'stan' od 'cechy' w psychologii?",
+  options: [
+    "Stan jest bardziej trwały niż cecha",
+    "Stan to chwilowe nasilenie jakości psychologicznej, cecha – stała dyspozycja",
+    "Stan dotyczy tylko emocji, cecha – tylko poznania",
+    "Nie ma między nimi żadnej istotnej różnicy"
+  ],
+  correct: 1,
+  explanation: "<strong>Stan</strong> (np. stan lękowy) to <em>przejściowe</em>, zmienne nasilenie jakiejś jakości psychologicznej – zależy od aktualnej sytuacji i mija. <strong>Cecha</strong> (np. lęk jako cecha) to stała tendencja do reagowania w określony sposób. Np. ktoś może być akurat smutny (stan), choć generalnie jest pogodny (cecha). To rozróżnienie wprowadził m.in. Spielberger w teorii lęku."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Co oznacza pojęcie 'typ' w psychologii różnic indywidualnych?",
+  options: [
+    "Ciągłe continuum wartości na skali",
+    "Kategoria skupiająca osoby o zbliżonym profilu cech, traktująca różnice jako jakościowe",
+    "Jednorazowe zachowanie obserwowane w laboratorium",
+    "Styl uczenia się opracowany na potrzeby edukacji"
+  ],
+  correct: 1,
+  explanation: "<strong>Typ</strong> to podejście <em>kategorialne</em> – zakłada, że ludzi można podzielić na odrębne klasy (np. intro- i ekstrawertyk). W odróżnieniu od ciągłych wymiarów, typy sugerują, że różnice są jakościowe, nie tylko ilościowe. Klasycznym przykładem jest typologia Junga. Podejście typologiczne jest wygodne w praktyce, ale bywa krytykowane za nadmierne upraszczanie."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Co to jest 'styl' w psychologii różnic indywidualnych?",
+  options: [
+    "Maksymalny poziom sprawności w jakimś zadaniu",
+    "Charakterystyczny, preferowany sposób przetwarzania informacji lub działania, niezależny od treści",
+    "Wrodzony odruch warunkowy",
+    "Norma kulturowa dotycząca zachowania"
+  ],
+  correct: 1,
+  explanation: "<strong>Styl</strong> (np. styl poznawczy, styl działania) to <em>preferowany, habitualizowany sposób</em> funkcjonowania – nie zdolność maksymalna, lecz typowy sposób postępowania. Np. styl refleksyjny vs. impulsywny (Kagan) opisuje, jak ktoś zwykle przetwarza informacje. Style są pośrednie między cechami osobowości a zdolnościami – dotyczą „jak” działamy, nie „jak dobrze”."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Jaką rolę odgrywają czynniki genetyczne w determinowaniu inteligencji?",
+  options: [
+    "Geny nie mają żadnego wpływu na inteligencję – liczy się wyłącznie środowisko",
+    "Geny są jedynym wyznacznikiem inteligencji",
+    "Geny odpowiadają za znaczną część zmienności inteligencji, ale środowisko też ma istotne znaczenie",
+    "Związek genetyki z inteligencją dotyczy wyłącznie IQ poniżej 70"
+  ],
+  correct: 2,
+  explanation: "Badania na bliźniętach i rodzinach adopcyjnych pokazują, że <strong>odziedziczalność inteligencji</strong> (h²) wynosi ok. 0,5–0,8 w dorosłości. Oznacza to, że geny tłumaczą 50–80% zmienności w populacji. Jednak środowisko – wzbogacone lub zubożałe – znacząco modyfikuje ekspresję potencjału genetycznego. Odziedziczalność to populacyjna statystyka, nie wyrok dla jednostki."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Czym jest 'odziedziczalność' (heritability) w kontekście różnic indywidualnych?",
+  options: [
+    "Procentem osób w populacji, które odziedziczyły daną cechę po rodzicach",
+    "Proporcją zmienności danej cechy w populacji, którą można przypisać różnicom genetycznym",
+    "Prawdopodobieństwem, że dziecko będzie podobne do rodziców",
+    "Liczbą genów odpowiedzialnych za daną cechę"
+  ],
+  correct: 1,
+  explanation: "<strong>Odziedziczalność (h²)</strong> to statystyczny wskaźnik mówiący, jaka część <em>różnic między ludźmi</em> w danej populacji i czasie wynika z różnic genetycznych. Np. h² = 0,6 dla inteligencji oznacza, że 60% zmienności IQ w tej populacji wiąże się z genotypem. To NIE znaczy, że 60% inteligencji jednostki pochodzi z genów – to populacyjna statystyka."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Badania bliźniąt jedno- i dwujajowych są ważne dla psychologii różnic indywidualnych, ponieważ:",
+  options: [
+    "Pozwalają kontrolować wiek i płeć badanych",
+    "Umożliwiają rozdzielenie wpływu genotypu od wspólnego środowiska",
+    "Bliźnięta zawsze mają identyczne osobowości",
+    "Dowodzą, że środowisko jest ważniejsze od genów"
+  ],
+  correct: 1,
+  explanation: "Bliźnięta jednojajowe (MZ) mają identyczny genotyp, dwujajowe (DZ) – ok. 50% wspólnych genów. Porównując podobieństwo MZ i DZ <strong>wychowywanych razem lub osobno</strong>, możemy oszacować udział genów, wspólnego środowiska i unikalnego środowiska w kształtowaniu danej cechy. To klasyczna metoda behawioralno-genetyczna."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Jaką rolę odgrywa środowisko niespecyficzne (unshared environment) w kształtowaniu temperamentu?",
+  options: [
+    "Żadną – temperament jest w 100% genetyczny",
+    "Istotną – doświadczenia unikalne dla jednostki (choroby, różne relacje rówieśnicze) kształtują temperament obok genów",
+    "Decydującą – geny nie mają znaczenia dla temperamentu",
+    "Środowisko niespecyficzne dotyczy tylko inteligencji, nie temperamentu"
+  ],
+  correct: 1,
+  explanation: "Badania genetyczne wskazują, że temperament ma umiarkowaną–wysoką odziedziczalność (ok. 0,4–0,6), ale istotna część zmienności wynika ze <strong>środowiska niespecyficznego</strong> – unikalnych doświadczeń jednostki (np. choroba we wczesnym dzieciństwie, relacje z konkretnym rówieśnikiem, uraz). Co ciekawe, wspólne środowisko rodzinne (dom, rodzice) tłumaczy stosunkowo mało zmienności temperamentu."
+},
+{
+  chapter: "1. Psychologia różnic indywidualnych",
+  q: "Biologiczne podłoże różnic indywidualnych obejmuje m.in.:",
+  options: [
+    "Wyłącznie kulturowe normy przekazywane przez rodziców",
+    "Budowę i funkcjonowanie układu nerwowego, poziom neuroprzekaźników oraz hormonów",
+    "Wyłącznie czynniki dietetyczne",
+    "Klimat i geografię zamieszkania"
+  ],
+  correct: 1,
+  explanation: "Różnice indywidualne mają podłoże <strong>neurobiologiczne</strong>: różnice w strukturze mózgu, reaktywności układu nerwowego, poziomach neuroprzekaźników (dopamina, serotonina, noradrenalina) i hormonów (kortyzol, testosteron). Np. Eysenck wiązał ekstrawersję z poziomem pobudzenia korowego; Gray łączył neurotyzm i lęk z układem BIS (Behavioral Inhibition System)."
+},
+
+// ══════════════════════════════════════════
+// 2. TEMPERAMENT
+// ══════════════════════════════════════════
+{
+  chapter: "2. Temperament",
+  q: "Czym charakteryzuje się temperament jako konstrukt psychologiczny?",
+  options: [
+    "Jest nabywany głównie przez uczenie się i obserwację",
+    "To formalne przekonania i wartości jednostki",
+    "To wrodzone, biologicznie zdeterminowane cechy dotyczące energetycznych i czasowych aspektów zachowania",
+    "Kształtuje się dopiero w dorosłości"
+  ],
+  correct: 2,
+  explanation: "<strong>Temperament</strong> to biologicznie zdeterminowane, relatywnie stałe właściwości dotyczące głównie <em>aspektów formalnych zachowania</em>: jego energii (intensywność, reaktywność) oraz czasu (rytmiczność, tempo). Ujawnia się wcześnie, jest widoczny u dzieci, a nawet zwierząt. Różni się od osobowości, która bardziej zależy od treści (wartości, przekonania) i jest silniej kształtowana przez kulturę."
+},
+{
+  chapter: "2. Temperament",
+  q: "Koncepcja Pawłowa wyróżniała typy układu nerwowego na podstawie:",
+  options: [
+    "Pięciu wymiarów osobowości",
+    "Siły, równowagi i ruchliwości procesów nerwowych (pobudzenia i hamowania)",
+    "Poziomów inteligencji emocjonalnej",
+    "Stylów przywiązania wczesnodziecięcego"
+  ],
+  correct: 1,
+  explanation: "Iwan <strong>Pawłow</strong> opisał typy na podstawie właściwości procesów pobudzenia i hamowania w OUN: <em>siły</em> (silny vs. słaby), <em>równowagi</em> (zrównoważony vs. niezrównoważony) i <em>ruchliwości</em> (ruchliwy vs. inertny). Dało to 4 typy odpowiadające klasycznym typom Hipokratesa: sangwinik, choleryk, flegmatyk, melancholik. To fundament biologicznych teorii temperamentu."
+},
+{
+  chapter: "2. Temperament",
+  q: "Alexander Thomas i Stella Chess wyróżnili w swojej koncepcji następujące typy temperamentu dziecka:",
+  options: [
+    "Introwertyczne, ekstrawertyczne i ambiweryczne",
+    "Łatwe, trudne i powoli rozgrzewające się",
+    "Reaktywne, proaktywne i neutralne",
+    "Sangwiniczne, choleryczne i flegmatyczne"
+  ],
+  correct: 1,
+  explanation: "Thomas i Chess na podstawie podłużnych badań (NYLS) wyróżnili trzy typy dzieci: <strong>łatwe</strong> (regularne, adaptujące się, pozytywny nastrój), <strong>trudne</strong> (nieregularne, słaba adaptacja, intensywne reakcje, negatywny nastrój) oraz <strong>powoli rozgrzewające się</strong> (wycofanie przy nowości, stopniowa adaptacja). Wprowadzili też koncepcję <em>dopasowania</em> (goodness of fit) – ważne jest, czy temperament dziecka pasuje do oczekiwań środowiska."
+},
+{
+  chapter: "2. Temperament",
+  q: "Teoria zahamowania (inhibited) i rozhamowania (uninhibited) temperamentu została opracowana przez:",
+  options: [
+    "Sigmunda Freuda",
+    "Jerome'a Kagana",
+    "Aleksandra Łurię",
+    "Abrahama Maslowa"
+  ],
+  correct: 1,
+  explanation: "<strong>Jerome Kagan</strong> opisał dwa bieguny temperamentu: dzieci <em>zahamowane</em> (shy, inhibited) – wycofujące się w obliczu nowości, z wysoką reaktywnością ciała migdałowatego – i dzieci <em>rozhamowane</em> (uninhibited) – śmiałe, otwarte na nowość. Różnice mają podstawę biologiczną (próg pobudzenia amygdali) i są względnie stabilne od 2. roku życia do wczesnej dorosłości."
+},
+{
+  chapter: "2. Temperament",
+  q: "Funkcjonalne znaczenie temperamentu polega na:",
+  options: [
+    "Określaniu poziomu inteligencji ogólnej",
+    "Regulowaniu stylu radzenia sobie ze stresem i modulowaniu przetwarzania bodźców",
+    "Kształtowaniu wyłącznie relacji z rówieśnikami w wieku szkolnym",
+    "Wyznaczaniu kariery zawodowej człowieka"
+  ],
+  correct: 1,
+  explanation: "Temperament pełni ważne <strong>funkcje regulacyjne</strong>: moduluje poziom stymulacji, którą jednostka może znosić (Strelau – optymalne pobudzenie), wpływa na styl radzenia sobie ze stresem (reaktywność temperamentalna), wyznacza preferowane sytuacje i aktywności. Osoby wysokoreaktywne szukają mniej stymulacji, niskoreaktywne – więcej. To ma wpływ na wybór pracy, towarzystwa, stylu życia."
+},
+{
+  chapter: "2. Temperament",
+  q: "Transakcyjny model temperamentu Andrzeja Eliasza zakłada, że:",
+  options: [
+    "Temperament jest niezmienialny od urodzenia do śmierci",
+    "Temperament i środowisko wzajemnie na siebie wpływają – jednostka aktywnie kształtuje swoje środowisko zgodnie z temperamentem",
+    "Środowisko jest jedynym wyznacznikiem zachowania, a temperament nie odgrywa roli",
+    "Temperament objawia się wyłącznie w sytuacjach ekstremalnych"
+  ],
+  correct: 1,
+  explanation: "Eliasz podkreślał <strong>transakcyjność</strong>: temperament i środowisko wchodzą w dynamiczne, dwustronne interakcje. Osoba o określonym temperamencie wybiera i kreuje środowisko zgodne z własnymi predyspozycjami (niszę ekologiczną). Środowisko z kolei wzmacnia lub osłabia pewne cechy temperamentalne. To przejście od modelu addytywnego (geny + środowisko) do interakcyjno-transakcyjnego."
+},
+{
+  chapter: "2. Temperament",
+  q: "Jaką zależność między reaktywnością temperamentalną a efektywnością działania zakłada Regulacyjna Teoria Temperamentu (Strelau)?",
+  options: [
+    "Im wyższa reaktywność, tym zawsze wyższa efektywność",
+    "Efektywność jest optymalna, gdy pobudzenie dopasowane jest do optymalnego poziomu stymulacji; mismatch obniża efektywność",
+    "Reaktywność nie ma wpływu na efektywność",
+    "Osoby niskoreaktywne są zawsze bardziej efektywne"
+  ],
+  correct: 1,
+  explanation: "Według <strong>RTT Strelaua</strong> każda osoba ma swój optymalny poziom pobudzenia. Osoby <em>wysokoreaktywne</em> szybko osiągają maksymalne pobudzenie – potrzebują mniej stymulacji, preferują spokojne środowisko. <em>Niskoreaktywne</em> potrzebują więcej bodźców, by osiągnąć optimum. Efektywność spada, gdy stymulacja jest zbyt wysoka lub zbyt niska względem optimum – stąd ważne jest dopasowanie środowiska do temperamentu."
+},
+{
+  chapter: "2. Temperament",
+  q: "Które z poniższych jest cechą temperamentu według Tomasza i Chess, a nie przykładem osobowości?",
+  options: [
+    "System wartości moralnych",
+    "Rytmiczność biologiczna (regularność cykli snu, głodu)",
+    "Przekonania polityczne",
+    "Poczucie własnej wartości"
+  ],
+  correct: 1,
+  explanation: "Thomas i Chess operacjonalizowali temperament przez 9 wymiarów, w tym <strong>rytmiczność</strong> (regularność biologicznych cykli), poziom aktywności, podejście/wycofanie, intensywność reakcji, próg wrażliwości. Są to formalne właściwości zachowania, niezależne od treści (wartości, przekonania) – które należą do osobowości kształtowanej bardziej przez doświadczenie i kulturę."
+},
+{
+  chapter: "2. Temperament",
+  q: "Concept 'goodness of fit' (dobrego dopasowania) Thomasa i Chess oznacza:",
+  options: [
+    "Genetyczne podobieństwo rodziców i dzieci",
+    "Zgodność między temperamentem dziecka a wymaganiami i oczekiwaniami środowiska",
+    "Poziom inteligencji dziecka dopasowany do programu szkolnego",
+    "Stylowe ubranie dziecka stosowne do sytuacji"
+  ],
+  correct: 1,
+  explanation: "<strong>Goodness of fit</strong> – „dobre dopasowanie” – to kluczowy termin z teorii Thomasa i Chess. Dobre dopasowanie pojawia się, gdy wymagania środowiska (rodziców, szkoły) są spójne z temperamentem dziecka. Zły fit – np. rodzic wymagający punktualności od dziecka o nieregularnym rytmie – prowadzi do konfliktów i problemów adaptacyjnych. Implikacja praktyczna: trzeba dopasować środowisko do dziecka, nie odwrotnie."
+},
+{
+  chapter: "2. Temperament",
+  q: "Dzieci zahamowane temperamentalnie (wg Kagana) charakteryzują się m.in.:",
+  options: [
+    "Wysoką potrzebą ryzyka i poszukiwania doznań",
+    "Skłonnością do wycofywania się w obliczu nowości, wysoką reaktywnością układu autonomicznego, wyższą aktywnością ciała migdałowatego",
+    "Brakiem jakichkolwiek objawów lęku",
+    "Niską wrażliwością na bodźce nowe"
+  ],
+  correct: 1,
+  explanation: "Kagan wykazał, że dzieci <strong>zahamowane</strong> reagują na nowość wysokim pobudzeniem autonomicznym (szybsze bicie serca, wyższy kortyzol), wykazują zwiększoną aktywność ciała migdałowatego i są ostrożne w nowych sytuacjach. To biologiczny wzorzec – nie efekt wychowania. Dzieci zahamowane mają wyższe ryzyko zaburzeń lękowych w dorosłości, choć wiele z nich dobrze się adaptuje dzięki odpowiedniemu środowisku."
+},
+
+// ══════════════════════════════════════════
+// 3. OSOBOWOŚĆ
+// ══════════════════════════════════════════
+{
+  chapter: "3. Osobowość",
+  q: "Teoria PEN Hansa Eysencka wyróżnia trzy podstawowe wymiary osobowości. Które z nich?",
+  options: [
+    "Psychotyzm, Ekstrawersja, Neurotyzm",
+    "Perfekcjonizm, Emocjonalność, Neurotyzm",
+    "Przeżycia, Emocje, Normy",
+    "Pozytywność, Ekspresja, Niezależność"
+  ],
+  correct: 0,
+  explanation: "Eysenck wyróżnił trzy superczynniki: <strong>P</strong>sychotyzm (brak empatii, agresja, niekonwencjonalność), <strong>E</strong>kstrawersja (towarzyskość, asertywność, poszukiwanie stymulacji), <strong>N</strong>eurotyzm (labilność emocjonalna, lęk, zmienność nastrojów). Model PEN jest biologicznie zakorzeniony – każdy wymiar wiązał z określonymi mechanizmami neurobiologicznymi (arousal korowy dla E, reaktywność układu limbicznego dla N)."
+},
+{
+  chapter: "3. Osobowość",
+  q: "Model Wielkiej Piątki (PMO – Pięć Wielkich) obejmuje:",
+  options: [
+    "Siłę ego, Id, Superego, Jaźń, Persona",
+    "Neurotyzm, Ekstrawersję, Otwartość, Ugodowość, Sumienność",
+    "Lęk, Agresję, Wrogość, Narcyzm, Impulsywność",
+    "Optymizm, Pesymizm, Realizm, Idealizm, Pragmatyzm"
+  ],
+  correct: 1,
+  explanation: "Model PMO / <strong>Big Five</strong> (Costa, McCrae) wyróżnia pięć szerokich wymiarów: <strong>N</strong>eurotyzm, <strong>E</strong>kstrawersja, <strong>O</strong>twartość na doświadczenie, <strong>U</strong>godowość i <strong>S</strong>umienność. Każdy czynnik ma po 6 aspektów. Model uzyskano metodą analizy czynnikowej z wielu opisów cech. Jest dziś dominującym modelem w badaniach nad osobowością."
+},
+{
+  chapter: "3. Osobowość",
+  q: "Osobowość jako zbiór cech zakłada, że:",
+  options: [
+    "Zachowanie jest całkowicie zdeterminowane przez sytuację",
+    "Względnie stabilne dyspozycje (cechy) wyznaczają charakterystyczne wzorce myślenia, odczuwania i zachowania",
+    "Osobowość zmienia się radykalnie co kilka lat",
+    "Cechy istnieją tylko w umyśle obserwatora, nie w jednostce"
+  ],
+  correct: 1,
+  explanation: "Podejście <strong>dyspozycjonalne</strong> traktuje osobowość jako zbiór względnie stałych cech – wewnętrznych predyspozycji, które powodują spójność zachowania w różnych sytuacjach i w czasie. Kontrargumentem jest debata osoba-sytuacja (Mischel): sytuacje też silnie wpływają na zachowanie. Współcześnie przyjmuje się interakcję cech i sytuacji."
+},
+{
+  chapter: "3. Osobowość",
+  q: "Cecha Otwartość na doświadczenie (Big Five) oznacza:",
+  options: [
+    "Skłonność do przestrzegania zasad i norm społecznych",
+    "Tendencję do przeżywania negatywnych emocji",
+    "Ciekawość intelektualną, twórczość, wrażliwość estetyczną, otwartość na nowe pomysły i doświadczenia",
+    "Zdolność do nawiązywania i utrzymywania relacji"
+  ],
+  correct: 2,
+  explanation: "<strong>Otwartość na doświadczenie</strong> (Openness) opisuje osoby ciekawe intelektualnie, twórcze, otwarte na nowe idee i estetykę, wyobraźniowe. Niski wynik wiąże się z konwencjonalnością i preferencją rutyny. Ten wymiar jako jedyny w Wielkiej Piątce wyraźnie koreluje z płynnością myślenia twórczego i szerokim zainteresowaniem sztuką i kulturą."
+},
+{
+  chapter: "3. Osobowość",
+  q: "Neurotyzm w modelu Wielkiej Piątki oznacza:",
+  options: [
+    "Skłonność do agresji i manipulacji",
+    "Poziom labilności emocjonalnej – tendencję do przeżywania negatywnych emocji (lęk, smutek, wrogość) i trudności z regulacją emocjonalną",
+    "Niską inteligencję emocjonalną",
+    "Nadmierną towarzyskość i zależność od innych"
+  ],
+  correct: 1,
+  explanation: "<strong>Neurotyzm</strong> to wymiar <em>stabilności vs. niestabilności emocjonalnej</em>. Wysokie nasilenie = częste przeżywanie lęku, gniewu, winy, smutku, impulsywność. Niski neurotyzm = spokój, odporność na stres. Neurotyzm jest jednym z najsilniejszych predyktorów problemów ze zdrowiem psychicznym, choć sam w sobie nie jest zaburzeniem."
+},
+{
+  chapter: "3. Osobowość",
+  q: "Czym różni się teoria PEN Eysencka od Modelu Wielkiej Piątki?",
+  options: [
+    "PEN zawiera trzy superczynniki, Big Five – pięć wymiarów; oba modele różnią się też podejściem do biologicznego podłoża",
+    "PEN jest nowszy i bardziej szczegółowy",
+    "Big Five dotyczy wyłącznie patologii",
+    "Nie ma między nimi żadnych różnic merytorycznych"
+  ],
+  correct: 0,
+  explanation: "<strong>PEN Eysencka</strong>: 3 superczynniki (P, E, N), silne zakorzenienie biologiczne (układy nerwowe), hierarchiczna struktura. <strong>Big Five</strong>: 5 wymiarów (NEO), pochodzenie leksykalne (analiza przymiotników opisujących osobowość), mniej bezpośrednio teorii biologicznej. Otwartość i Ugodowość nie mają w PEN bezpośrednich odpowiedników. Big Five jest dziś dominujący empirycznie, PEN bardziej teorietycznie ugruntowany."
+},
+{
+  chapter: "3. Osobowość",
+  q: "Sumienność (Conscientiousness) w modelu Wielkiej Piątki koreluje m.in. z:",
+  options: [
+    "Skłonnością do przestępczości",
+    "Dłuższym życiem, lepszymi wynikami szkolnymi i zawodowymi oraz zdrowszymi zachowaniami",
+    "Wyższą kreatywnością i artystyczną wrażliwością",
+    "Intensywniejszymi relacjami romantycznymi"
+  ],
+  correct: 1,
+  explanation: "<strong>Sumienność</strong> to jeden z najlepiej przewidujących życiowe wyniki wymiarów. Wiąże się z samodyscypliną, planowaniem, rzetelności – i koreluje z <em>dłuższym życiem</em> (zdrowy styl życia), lepszymi wynikami szkolnymi i zawodowymi, niższą przestępczością. To wymiar, który po inteligencji najsilniej przewiduje sukces zawodowy."
+},
+
+// ══════════════════════════════════════════
+// 4. INTELIGENCJA
+// ══════════════════════════════════════════
+{
+  chapter: "4. Inteligencja",
+  q: "Czym jest czynnik 'g' Charlesa Spearmana?",
+  options: [
+    "Zdolnością językową wyizolowaną przez Thurstona",
+    "Ogólną zdolnością umysłową – wspólnym czynnikiem leżącym u podłoża wszystkich zdolności intelektualnych",
+    "Pomiarem prędkości przetwarzania informacji",
+    "Inteligencją emocjonalną u dorosłych"
+  ],
+  correct: 1,
+  explanation: "Charles Spearman (1904) zastosował analizę czynnikową do wyników testów i odkrył, że wyniki dobrze korelują – co postulował jako dowód istnienia <strong>czynnika g</strong> (general intelligence). g reprezentuje ogólną zdolność do wnioskowania abstrakcyjnego, uczenia się i rozwiązywania problemów. Obok g wyróżniał czynniki s (specyficzne dla danej zdolności). Czynnik g do dziś jest uznawany za najlepszy psychometryczny predyktor wyników edukacyjnych i zawodowych."
+},
+{
+  chapter: "4. Inteligencja",
+  q: "Model CHC (Cattell-Horn-Carroll) wyróżnia inteligencję płynną (Gf) i skrystalizowaną (Gc). Czym się różnią?",
+  options: [
+    "Gf zależy od środowiska, Gc – wyłącznie od genów",
+    "Gf to zdolność wnioskowania bez wiedzy uprzedniej (maleje z wiekiem), Gc to wiedza i umiejętności nabyte przez uczenie się (rośnie z wiekiem)",
+    "Gf dotyczy emocji, Gc – logiki",
+    "Nie ma między nimi żadnej różnicy empirycznej"
+  ],
+  correct: 1,
+  explanation: "Cattell rozróżnił: <strong>Gf (fluid intelligence)</strong> – zdolność do rozwiązywania nowych problemów niezależnie od wcześniejszej wiedzy, silnie biologiczna, spada po 30. roku życia. <strong>Gc (crystallized intelligence)</strong> – nabyta wiedza, umiejętności słowne, doświadczenie; może wzrastać przez całe życie. Model CHC rozbudował te dwa czynniki do ok. 10 szerokich zdolności i ponad 70 wąskich."
+},
+{
+  chapter: "4. Inteligencja",
+  q: "Teoria inteligencji wielorakich Howarda Gardnera zakłada, że:",
+  options: [
+    "Istnieje jeden globalny czynnik inteligencji (g)",
+    "Inteligencja jest zestawem niezależnych zdolności (co najmniej 8), np. muzyczna, cielesno-kinestetyczna, interpersonalna",
+    "Inteligencja jest wrodzona i niezmienna",
+    "Wszyscy ludzie mają identyczny potencjał intelektualny"
+  ],
+  correct: 1,
+  explanation: "Gardner zaproponował (1983), że inteligencja to nie jeden wymiar, ale <strong>wiele niezależnych modułów</strong>: językowa, logiczno-matematyczna, przestrzenna, muzyczna, cielesno-kinestetyczna, interpersonalna, intrapersonalna, przyrodnicza (i in.). Teoria jest popularna w edukacji, ale bywa krytykowana metodologicznie – Gardner nie dostarczył wystarczających danych psychometrycznych potwierdzających niezależność tych zdolności."
+},
+{
+  chapter: "4. Inteligencja",
+  q: "Triarchiczna teoria inteligencji Roberta Sternberga obejmuje trzy podteorie. Które?",
+  options: [
+    "Analityczna, twórcza, praktyczna",
+    "Językowa, przestrzenna, logiczna",
+    "Emocjonalna, społeczna, akademicka",
+    "Płynna, skrystalizowana, wizualno-przestrzenna"
+  ],
+  correct: 0,
+  explanation: "Sternberg wyróżnił trzy składniki inteligencji: <strong>analityczną</strong> (rozwiązywanie problemów, akademicka), <strong>twórczą/syntetyczną</strong> (radzenie sobie z nowością, tworzenie nowych pomysłów) i <strong>praktyczną</strong> (adaptacja do środowiska, „street smarts”). Krytykował testy IQ za mierzenie tylko inteligencji analitycznej i ignorowanie twórczej i praktycznej."
+},
+{
+  chapter: "4. Inteligencja",
+  q: "Koncepcja inteligencji Edwarda Nęcki kładzie nacisk na:",
+  options: [
+    "Wyłącznie dziedziczne podłoże inteligencji",
+    "Procesualny aspekt inteligencji – sprawność podstawowych procesów poznawczych (uwaga, pamięć operacyjna, szybkość przetwarzania) jako fundament zdolności umysłowych",
+    "Inteligencję społeczną i emocjonalną jako najważniejszy wymiar",
+    "Podział na inteligencję dziecięcą i dorosłą jako dwa odrębne konstrukty"
+  ],
+  correct: 1,
+  explanation: "Nęcka reprezentuje <strong>procesualną perspektywę inteligencji</strong>: skupia się na mechanizmach poznawczych leżących u podłoża różnic w inteligencji – sprawności uwagi, szybkości i pojemności pamięci operacyjnej, tempa przetwarzania informacji. Bada, <em>dlaczego</em> jedni są inteligentniejsi – poszukując odpowiedzi w procesach elementarnych, nie tylko w wynikach testów."
+},
+{
+  chapter: "4. Inteligencja",
+  q: "Koncepcje 'czynników równorzędnych' (Thurstone) kwestionują model Spearmana, twierdząc:",
+  options: [
+    "Istnieje tylko jeden czynnik ogólny",
+    "Inteligencja składa się z kilku niezależnych zdolności pierwotnych (PMA), a nie jednego czynnika g",
+    "Inteligencja jest w pełni zdeterminowana środowiskiem",
+    "Różnice intelektualne nie mają znaczenia praktycznego"
+  ],
+  correct: 1,
+  explanation: "Louis Thurstone (1938) wyróżnił <strong>7 Pierwotnych Zdolności Umysłowych</strong> (PMA): słowne rozumienie, płynność słowna, liczby, pamięć, rozumowanie, szybkość percepcji, wyobraźnia przestrzenna. Twierdził, że lepiej opisują inteligencję niż jeden czynnik g. Jednak późniejsze badania wykazały, że te czynniki korelują ze sobą – co oznacza, że g nadal istnieje jako czynnik wyższy."
+},
+{
+  chapter: "4. Inteligencja",
+  q: "Efekt Flynna oznacza:",
+  options: [
+    "Spadek wyników IQ w populacji na przestrzeni ostatnich dziesięcioleci",
+    "Wzrost średnich wyników IQ w populacji o ok. 3 punkty na dekadę od XX w., wymagający częstego przeliczania norm testów",
+    "Dziedziczenie inteligencji wyłącznie po matce",
+    "Zjawisko cofania się wyników w starszym wieku"
+  ],
+  correct: 1,
+  explanation: "James Flynn odkrył, że średnie wyniki IQ w wielu krajach <strong>systematycznie rosną</strong> – ok. 3 punkty na dekadę. Dowodzi to, że geny same w sobie nie mogą tłumaczyć tych zmian (geny nie zmieniają się tak szybko) – poprawa wynika ze środowiska: lepsze odżywianie, edukacja, ochrona zdrowia, stymulacja intelektualna. To ważny argument pokazujący plastyczność inteligencji."
+},
+
+// ══════════════════════════════════════════
+// 5. STYLE POZNAWCZE, UMYSŁ, IE
+// ══════════════════════════════════════════
+{
+  chapter: "5. Style poznawcze, umysł, inteligencja emocjonalna",
+  q: "Test Kagana mierzący styl refleksyjność-impulsywność (MFF) polega na:",
+  options: [
+    "Ocenianiu szybkości reakcji na bodźce akustyczne",
+    "Wyborze spośród wariantów obrazka tego, który jest identyczny z wzorem – mierzy szybkość i liczbę błędów",
+    "Uzupełnianiu zdań niedokończonych",
+    "Rysowaniu postaci ludzkiej"
+  ],
+  correct: 1,
+  explanation: "Test MFF (Matching Familiar Figures) Kagana: badany musi znaleźć spośród 6 wariantów ten identyczny z wzorem. Kagan mierzył <em>czas reakcji</em> i <em>liczbę błędów</em>. <strong>Refleksyjni</strong> – wolniejsi, mniej błędów. <strong>Impulsywni</strong> – szybcy, więcej błędów. Styl odzwierciedla tendencję do kontrolowania odpowiedzi i standardy akceptowalności w sytuacji niepewności."
+},
+{
+  chapter: "5. Style poznawcze, umysł, inteligencja emocjonalna",
+  q: "Style poznawcze różnią się od zdolności intelektualnych tym, że:",
+  options: [
+    "Style wyznaczają poziom maksymalnego wykonania, zdolności – typowy",
+    "Style to preferowany, habitualny sposób przetwarzania informacji (nie max. sprawność), zdolności – poziom max. wykonania",
+    "Style dotyczą wyłącznie emocji, zdolności – wyłącznie myślenia",
+    "Style są wrodzone, zdolności nabywane"
+  ],
+  correct: 1,
+  explanation: "<strong>Styl poznawczy</strong> opisuje, <em>jak</em> zwykle myślimy i przetwarzamy informacje – preferowany, habitualizowany tryb poznania (np. globalny vs. analityczny). <strong>Zdolności</strong> – <em>jak dobrze</em> możemy wykonać zadanie (poziom max.). Osoba może mieć wysoki styl analityczny, ale niskie zdolności analityczne – albo odwrotnie. Style są bipolarne (żaden biegun nie jest „lepszy”), zdolności są unipolarne (wyżej = lepiej)."
+},
+{
+  chapter: "5. Style poznawcze, umysł, inteligencja emocjonalna",
+  q: "Inteligencja emocjonalna w modelu zdolnościowym (Mayer, Salovey, Caruso) to:",
+  options: [
+    "Cecha osobowości związana z pozytywnym nastawieniem do świata",
+    "Zdolność do trafnego spostrzegania, rozumienia i regulowania emocji własnych i innych",
+    "Umiejętność ukrywania emocji w sytuacjach społecznych",
+    "Wysoki wynik w testach MBTI"
+  ],
+  correct: 1,
+  explanation: "Model <strong>MSC (Mayer-Salovey-Caruso)</strong> definiuje IE jako hierarchiczną zdolność obejmującą: (1) percepcję emocji, (2) wspomaganie myślenia przez emocje, (3) rozumienie emocji, (4) zarządzanie emocjami. To model <em>zdolnościowy</em> – IE mierzy się testem wykonaniowym (jak IQ), nie kwestionariuszem. Odróżnia się od modeli mieszanych (np. Goleman), które łączą IE z cechami osobowości."
+},
+{
+  chapter: "5. Style poznawcze, umysł, inteligencja emocjonalna",
+  q: "Typologia umysłu (np. Baron-Cohen) wyróżnia:",
+  options: [
+    "Typy: sangwiniczny, choleryczny, flegmatyczny, melancholiczny",
+    "Umysły empatyzujące (E) i systematyzujące (S) jako dwa wymiary o różnym nasileniu",
+    "Lewopółkulowy i prawopółkulowy styl poznawczy jako absolutnie odrębne typy",
+    "Wyłącznie inteligencję werbalną i niewerbalną"
+  ],
+  correct: 1,
+  explanation: "Simon <strong>Baron-Cohen</strong> zaproponował wymiary <strong>E</strong> (Empathizing – rozumienie stanów mentalnych innych) i <strong>S</strong> (Systemizing – rozumienie reguł i systemów). Większość ludzi ma podobne E i S, kobiety statystycznie wyższe E, mężczyźni wyższe S. Ekstremalny Typ S wiąże się z spektrum autyzmu. To podejście zastąpiło proste podziały lewopółkulowy/prawopółkulowy."
+},
+{
+  chapter: "5. Style poznawcze, umysł, inteligencja emocjonalna",
+  q: "Regulacyjna rola inteligencji emocjonalnej przejawia się m.in. w:",
+  options: [
+    "Lepszym zapamiętywaniu dat historycznych",
+    "Skuteczniejszym radzeniu sobie ze stresem, budowaniu relacji i podejmowaniu decyzji poprzez świadome zarządzanie informacją emocjonalną",
+    "Wyższych wynikach testów IQ",
+    "Skłonności do unikania konfliktów za wszelką cenę"
+  ],
+  correct: 1,
+  explanation: "Wysoka IE wiąże się z efektywniejszą <strong>regulacją emocjonalną</strong>: osoby z wyższą IE trafniej rozumieją własne stany emocjonalne, potrafią je modulować, lepiej radzą sobie ze stresem, budują głębsze relacje interpersonalne i podejmują lepsze decyzje (bo korzystają z emocji jako informacji). To jeden z mechanizmów, przez które IE przekłada się na dobrostan i sukcesy życiowe."
+},
+{
+  chapter: "5. Style poznawcze, umysł, inteligencja emocjonalna",
+  q: "Kwestionariuszowy pomiar inteligencji emocjonalnej (np. INTE, DEIA) różni się od testów wykonaniowych tym, że:",
+  options: [
+    "Mierzy obiektywne zdolności przez zadania z poprawnymi odpowiedziami",
+    "Opiera się na samoocenie – bada przekonania jednostki o własnych zdolnościach emocjonalnych, co może różnić się od faktycznych zdolności",
+    "Jest bardziej trafny i rzetelny niż testy wykonaniowe",
+    "Może być stosowany wyłącznie u dzieci"
+  ],
+  correct: 1,
+  explanation: "<strong>Kwestionariusze IE</strong> (samopisu) mierzą to, co osoba <em>sądzi</em> o swoich emocjonalnych kompetencjach. Mogą różnić się od faktycznych zdolności mierzonych testami wykonaniowymi (MSCEIT). Samoocena IE bywa zawyżona lub zaniżona. Kwestionariusze mierzą raczej <em>cechy emocjonalne osobowości</em> niż zdolność – dlatego są krytykowane za mieszanie konstruktów. Ale są prostsze w użyciu i tańsze."
+},
+{
+  chapter: "5. Style poznawcze, umysł, inteligencja emocjonalna",
+  q: "Myślenie twórcze w ujęciu psychologii różnic indywidualnych wiąże się m.in. z:",
+  options: [
+    "Wysokim neurtyzmem i niską otwartością",
+    "Otwartością na doświadczenie, dywergencyjnym myśleniem i zdolnością do łączenia odległych skojarzeń",
+    "Wysoką sumiennością i konwencjonalnością",
+    "Wyłącznie wysokim IQ"
+  ],
+  correct: 1,
+  explanation: "<strong>Twórczość</strong> koreluje z: Otwartością na doświadczenie (Big Five), płynnością myślenia dywergencyjnego (Guilford), zdolnością do tworzenia odległych asocjacji (RAT – Remote Associates Test). Inteligencja (IQ) jest warunkiem koniecznym do pewnego progu (efekt prógu, threshold effect), ale sama nie wystarcza – powyżej 120 IQ twórczość bardziej zależy od osobowości i motywacji."
+},
+
+// ══════════════════════════════════════════
+// 6. TWÓRCZOŚĆ, RELACJE, ROZWÓJ
+// ══════════════════════════════════════════
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Perspektywa 4P w badaniach nad twórczością obejmuje:",
+  options: [
+    "Planowanie, Przygotowanie, Produkcję, Prezentację",
+    "Osobę (Person), Proces, Produkt, Otoczenie (Press/Place)",
+    "Percepcję, Pamięć, Przetwarzanie, Produkcję",
+    "Pobudzenie, Poszukiwanie, Próbowanie, Postęp"
+  ],
+  correct: 1,
+  explanation: "Rhodes (1961) zaproponował model <strong>4P</strong>: <em>Person</em> (cechy twórcy – otwartość, tolerancja wieloznaczności), <em>Process</em> (etapy myślenia twórczego – Wallas: przygotowanie, inkubacja, iluminacja, weryfikacja), <em>Product</em> (nowość i wartość wytworu), <em>Press/Place</em> (środowisko sprzyjające twórczości). To integrująca ramka dla badań nad twórczością."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Jak cechy osobowości (np. Ugodowość, Neurotyzm) przekładają się na relacje interpersonalne?",
+  options: [
+    "Cechy osobowości nie mają wpływu na relacje – liczą się wyłącznie umiejętności społeczne",
+    "Wysoka Ugodowość sprzyja harmonijnym relacjom, Wysoki Neurotyzm koreluje z konfliktami, niestabilnością związków i niższym zadowoleniem z relacji",
+    "Ekstrawersja jednoznacznie wyklucza głębokie relacje",
+    "Sumienność jest jedynym wymiarem mającym znaczenie dla relacji"
+  ],
+  correct: 1,
+  explanation: "Cechy Big Five mają udokumentowane związki z relacjami: <strong>Ugodowość</strong> (altruizm, życzliwość) sprzyja harmonii, empatii, mniejszej konfliktogewości. <strong>Neurotyzm</strong> wiąże się z niestabilnością emocjonalną w związkach, zazdrością, częstszymi kłótniami i niższą satysfakcją z relacji. <strong>Ekstrawersja</strong> sprzyja nawiązywaniu relacji, ale nie ich głębokości. <strong>Sumienność</strong> – większa niezawodność jako partner."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Wzorce przywiązania (Bowlby, Ainsworth) – bezpieczny styl przywiązania kształtuje się, gdy:",
+  options: [
+    "Dziecko jest pozostawione samemu sobie, by rozwinąć niezależność",
+    "Opiekun jest konsekwentnie dostępny, wrażliwy i responsywny na sygnały dziecka",
+    "Dziecko jest chronione przed jakimkolwiek stresem",
+    "Rodzice stosują głównie nagrody materialne"
+  ],
+  correct: 1,
+  explanation: "<strong>Bezpieczny styl przywiązania</strong> (Ainsworth – typ B) kształtuje się, gdy opiekun jest <em>dostępny, wrażliwy i spójny</em>. Dziecko uczy się, że środowisko jest bezpieczne i można ufać innym. Przekłada się to na dorosłość: bezpieczne osoby łatwiej budują bliskie relacje, mają wyższe poczucie własnej wartości i lepiej regulują emocje. Styl przywiązania to wczesny wzorzec różnic indywidualnych w relacjach."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Procesy emocjonalne jako wyjaśnienie zachowań w relacjach obejmują m.in.:",
+  options: [
+    "Wyłącznie racjonalne rozważanie konsekwencji działań",
+    "Regulację emocjonalną, empatię, mentalizację (rozumienie stanów umysłowych innych) i afekt jako sygnał w podejmowaniu decyzji",
+    "Wyłącznie odruchy bezwarunkowe",
+    "Mechanizmy genetyczne bez udziału świadomości"
+  ],
+  correct: 1,
+  explanation: "W relacjach kluczowe są procesy: <strong>empatia</strong> (rozumienie perspektywy i emocji innego), <strong>mentalizacja</strong> (teoria umysłu – myślenie o stanach mentalnych), <strong>regulacja emocjonalna</strong> (zdolność do modulowania własnych emocji) i <strong>afekt jako informacja</strong> (Schwarz i Clore). Różnice indywidualne w tych procesach tłumaczą, dlaczego jedni tworzą satysfakcjonujące relacje, a inni mają z tym trudności."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Zahamowanie behawioralne (behavioral inhibition) jako predyktor zaburzeń lękowych oznacza:",
+  options: [
+    "Skłonność do impulsywnych zachowań w grupie rówieśniczej",
+    "Wczesnodziecięcy wzorzec wycofania w obliczu nowości, który statystycznie zwiększa ryzyko zaburzeń lękowych, szczególnie przy braku wspierającego środowiska",
+    "Zaburzenie uwagi związane z nadmierną aktywnością",
+    "Wyłącznie genetycznie zdeterminowany wzorzec bez roli środowiska"
+  ],
+  correct: 1,
+  explanation: "<strong>Zahamowanie behawioralne</strong> (Kagan) w dzieciństwie jest czynnikiem ryzyka zaburzeń lękowych (szczególnie fobii społecznej) w dorosłości. Jednak nie jest deterministyczne – środowisko mediuje: wspierające, dające dziecku stopniowe doświadczenia sprawczości może zmniejszyć to ryzyko. To przykład interakcji temperament × środowisko w kontekście prawidłowości i zaburzeń rozwoju."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Wzorce zachowań społecznych jako obszar zastosowań temperamentu i osobowości obejmuje:",
+  options: [
+    "Tylko dobór zawodowy w armii",
+    "Przewidywanie preferencji w zakresie stylu pracy, rodzaju relacji, środowisk społecznych, radzenia sobie z konfliktami – i dopasowywanie interwencji do profilu jednostki",
+    "Wyłącznie diagnostykę kliniczną zaburzeń",
+    "Jedynie dobór partnerów romantycznych"
+  ],
+  correct: 1,
+  explanation: "Wiedza o temperamencie i osobowości ma szerokie zastosowania: <strong>doradztwo zawodowe</strong> (dopasowanie środowiska pracy do reaktywności temperamentalnej), <strong>terapia</strong> (dostosowanie technik do cech klienta), <strong>edukacja</strong> (dobry fit ucznia z metodami nauczania), <strong>relacje interpersonalne</strong> (rozumienie źródeł konfliktów). Różnice indywidualne to nie „etykiety”, lecz narzędzie do personalizacji wsparcia."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Motywacja jako element wyjaśniania zachowania w kontekście różnic indywidualnych – teoria samodeterminacji (Deci, Ryan) wyróżnia:",
+  options: [
+    "Motywację pozytywną i negatywną jako dwa typy",
+    "Kontinuum od motywacji zewnętrznej (nagrody, kary) do wewnętrznej (autonomicznej), z kluczową rolą zaspokojenia potrzeb autonomii, kompetencji i relacji",
+    "Tylko motywację osiągnięć jako istotną dla różnic indywidualnych",
+    "Trzy instynktowe popędy: seks, agresja, głód"
+  ],
+  correct: 1,
+  explanation: "<strong>SDT (Deci i Ryan)</strong>: motywacja leży na kontinuum od <em>amotywacji</em> przez <em>zewnętrzną</em> (nagrody, kary) do <em>zinternalizowanej</em> i <em>wewnętrznej</em> (autonomiczna). Trzy podstawowe potrzeby psychologiczne: <strong>autonomia, kompetencja, relacje</strong> – ich zaspokojenie sprzyja internalizacji motywacji i dobrostanowi. Różnice indywidualne w motywacji tłumaczą różne poziomy zaangażowania i wytrwałości."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Efekt Pigmaliona (Rosenthal i Jacobson) w kontekście różnic indywidualnych i środowiska szkolnego polega na:",
+  options: [
+    "Tym, że uczniowie uczą się najlepiej samodzielnie bez oczekiwań nauczyciela",
+    "Tym, że oczekiwania nauczyciela wobec ucznia (oparte m.in. na różnicach indywidualnych) wpływają na rzeczywiste osiągnięcia – samospełniająca się przepowiednia",
+    "Tym, że test IQ jest najlepszym predyktorem wyników szkolnych",
+    "Spadkiem motywacji po nagrodach zewnętrznych"
+  ],
+  correct: 1,
+  explanation: "<strong>Efekt Pigmaliona</strong>: Rosenthal i Jacobson (1968) pokazali, że gdy powiedziano nauczycielom (fałszywie), że niektórzy uczniowie mają wysoki potencjał, ci uczniowie faktycznie uzyskali lepsze wyniki. Mechanizm: oczekiwania zmieniają zachowanie nauczyciela (więcej uwagi, cieplejszy klimat) → uczniowie rosną lub kurczą się do oczekiwań. To ilustruje, jak środowisko społeczne interaguje z różnicami indywidualnymi."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Koncepcja 'ciemnej triady' w psychologii osobowości obejmuje:",
+  options: [
+    "Neurotyzm, Introwersję, Niską Sumienność",
+    "Narcyzm, Makiawelizm, Psychopatię",
+    "Lęk, Depresję, Zaburzenia osobowości",
+    "Agresję, Impulsywność, Uzależnienia"
+  ],
+  correct: 1,
+  explanation: "<strong>Ciemna triada</strong> (Paulhus, Williams): <em>Narcyzm</em> (grandiozja, potrzeba podziwu), <em>Makiawelizm</em> (manipulacja, cynizm, zimna kalkulacja), <em>Psychopatia</em> (brak empatii, impulsywność, poszukiwanie ryzyka). Osoby z wysokim nasileniem tych cech mają specyficzne wzorce relacji społecznych – skłonność do eksploatowania innych. To przykład, jak cechy osobowości przekładają się na wzorce zachowań społecznych."
+},
+{
+  chapter: "6. Twórczość, relacje, różnice indywidualne",
+  q: "Metaanalityczne badania nad stabilnością osobowości wskazują, że:",
+  options: [
+    "Osobowość jest całkowicie stała od 5. roku życia",
+    "Osobowość jest względnie stabilna w dorosłości, ale podlega systematycznym zmianom (dojrzewanie osobowości) – zwłaszcza wzrost Sumienności i Ugodowości, spadek Neurotyzmu",
+    "Zmiany osobowości są wyłącznie efektem zaburzeń psychicznych",
+    "Po 30. roku życia żadne zmiany osobowości nie są możliwe"
+  ],
+  correct: 1,
+  explanation: "Badania podłużne (Roberts i in.) pokazują, że osobowość jest <strong>względnie stabilna</strong> (korelacje rank-order ok. 0,6-0,7 na przestrzeni lat), ale nie niezmienna. Obserwuje się <em>dojrzewanie osobowości</em>: wzrost Sumienności i Ugodowości, spadek Neurotyzmu i Ekstrawersji w dorosłości. Duże zmiany życiowe i celowe interwencje (psychoterapia) mogą przyspieszać te zmiany."
+}
+
+]; // end ALL_QUESTIONS
+
+const TOPICS = [
+  { id: 0, label: "1. Psychologia różnic indywidualnych", emoji: "🔬" },
+  { id: 1, label: "2. Temperament", emoji: "🌡️" },
+  { id: 2, label: "3. Osobowość", emoji: "🧬" },
+  { id: 3, label: "4. Inteligencja", emoji: "💡" },
+  { id: 4, label: "5. Style poznawcze & IE", emoji: "🧩" },
+  { id: 5, label: "6. Twórczość & Relacje", emoji: "🌐" }
+];
+
+let questions = [];
+let currentIdx = 0;
+let score = 0;
+let answered = false;
+let selectedTopics = new Set([0,1,2,3,4,5]);
+
+function initTopicSelect() {
+  const grid = document.getElementById('topicSelectGrid');
+  grid.innerHTML = '';
+  TOPICS.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'topic-card-select selected';
+    card.dataset.id = t.id;
+    card.innerHTML = `<div class="num">${t.emoji}</div><div class="title">${t.label}</div>`;
+    card.onclick = () => {
+      if (selectedTopics.has(t.id)) {
+        if (selectedTopics.size === 1) return;
+        selectedTopics.delete(t.id);
+        card.classList.remove('selected');
+      } else {
+        selectedTopics.add(t.id);
+        card.classList.add('selected');
+      }
+      updateSelectedInfo();
+    };
+    grid.appendChild(card);
+  });
+}
+
+function updateSelectedInfo() {
+  const n = selectedTopics.size;
+  const count = ALL_QUESTIONS.filter(q => {
+    const topicIdx = Math.floor(ALL_QUESTIONS.indexOf(q) / 10);
+    return selectedTopics.has(topicIdx);
+  }).length;
+  document.getElementById('selectedInfo').textContent =
+    n === 6 ? 'Zaznaczone: wszystkie tematy (' + count + ' pytań)' : 'Zaznaczone: ' + n + ' ' + (n === 1 ? 'temat' : 'tematy/ów') + ' (' + count + ' pytań)';
+}
+
+function startQuiz() {
+  document.querySelector('.header').classList.add('hidden');
+  questions = ALL_QUESTIONS.filter((q, i) => {
+    const topicIdx = Math.floor(i / 10);
+    return selectedTopics.has(topicIdx);
+  });
+  shuffle(questions);
+  currentIdx = 0;
+  score = 0;
+  answered = false;
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('quizArea').style.display = 'block';
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('totalDisplay').textContent = questions.length;
+  showQuestion();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function showQuestion() {
+  const q = questions[currentIdx];
+  answered = false;
+
+  document.getElementById('chapterLabel').textContent = q.chapter;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('scoreDisplay').textContent = score;
+
+  const pct = (currentIdx / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `Pytanie ${currentIdx + 1} z ${questions.length}`;
+
+  const optCont = document.getElementById('optionsContainer');
+  optCont.innerHTML = '';
+
+  const letters = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[idx]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(idx);
+    optCont.appendChild(btn);
+  });
+
+  document.getElementById('explanationBox').classList.remove('show');
+  document.getElementById('nextBtn').classList.remove('show');
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[currentIdx];
+  const buttons = document.querySelectorAll('.option-btn');
+
+  buttons.forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx === q.correct) btn.classList.add('correct');
+    else if (idx === chosen) btn.classList.add('wrong');
+  });
+
+  if (chosen === q.correct) score++;
+  document.getElementById('scoreDisplay').textContent = score;
+
+  document.getElementById('explanationText').innerHTML = q.explanation;
+  document.getElementById('explanationBox').classList.add('show');
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.classList.add('show');
+  if (currentIdx === questions.length - 1) {
+    nextBtn.textContent = 'Zobacz wyniki →';
+  } else {
+    nextBtn.textContent = 'Następne pytanie →';
+  }
+}
+
+function nextQuestion() {
+  currentIdx++;
+  if (currentIdx >= questions.length) {
+    showResult();
+  } else {
+    document.getElementById('questionCard').style.animation = 'none';
+    setTimeout(() => {
+      document.getElementById('questionCard').style.animation = '';
+      showQuestion();
+    }, 10);
+  }
+}
+
+function showResult() {
+  document.getElementById('quizArea').style.display = 'none';
+  const card = document.getElementById('resultCard');
+  card.classList.add('show');
+
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('resultScore').textContent = `${score} / ${questions.length} (${pct}%)`;
+
+  let emoji, msg;
+  if (pct >= 90) {
+    emoji = '🏆'; msg = 'Doskonały wynik! Masz bardzo solidną wiedzę z psychologii różnic indywidualnych. Tak trzymać!';
+  } else if (pct >= 75) {
+    emoji = '🎯'; msg = 'Świetna robota! Znasz większość materiału. Wróć do pytań, które sprawiły trudność – objaśnienia są po każdym pytaniu.';
+  } else if (pct >= 50) {
+    emoji = '📚'; msg = 'Dobry start! Materiał jest spory – powtórz działy, w których popełniłaś więcej błędów. Każda kolejna próba przyniesie poprawę.';
+  } else {
+    emoji = '💪'; msg = 'Nie martw się – to skomplikowany materiał! Czytaj objaśnienia przy każdym pytaniu, a z każdym razem będzie lepiej.';
+  }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultMsg').textContent = msg;
+}
+
+function restartQuiz() {
+  document.querySelector('.header').classList.remove('hidden');
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('startScreen').style.display = 'block';
+}
+
+// INIT
+initTopicSelect();
+updateSelectedInfo();
+</script>
+</body>
+</html>
