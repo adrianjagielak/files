@@ -1120,6 +1120,7 @@ let questions = [];
 let currentIdx = 0;
 let score = 0;
 let answered = false;
+let currentCorrectIdx = 0;
 let selectedTopics = new Set([0,1,2,3,4,5]);
 
 function initTopicSelect() {
@@ -1194,12 +1195,16 @@ function showQuestion() {
   const optCont = document.getElementById('optionsContainer');
   optCont.innerHTML = '';
 
+  const order = q.options.map((_, i) => i);
+  shuffle(order);
+  currentCorrectIdx = order.indexOf(q.correct);
+
   const letters = ['A', 'B', 'C', 'D'];
-  q.options.forEach((opt, idx) => {
+  order.forEach((origIdx, displayIdx) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.innerHTML = `<span class="option-letter">${letters[idx]}</span>${opt}`;
-    btn.onclick = () => selectAnswer(idx);
+    btn.innerHTML = `<span class="option-letter">${letters[displayIdx]}</span>${q.options[origIdx]}`;
+    btn.onclick = () => selectAnswer(displayIdx);
     optCont.appendChild(btn);
   });
 
@@ -1216,11 +1221,11 @@ function selectAnswer(chosen) {
 
   buttons.forEach((btn, idx) => {
     btn.disabled = true;
-    if (idx === q.correct) btn.classList.add('correct');
+    if (idx === currentCorrectIdx) btn.classList.add('correct');
     else if (idx === chosen) btn.classList.add('wrong');
   });
 
-  if (chosen === q.correct) score++;
+  if (chosen === currentCorrectIdx) score++;
   document.getElementById('scoreDisplay').textContent = score;
 
   document.getElementById('explanationText').innerHTML = q.explanation;
