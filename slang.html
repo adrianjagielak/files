@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Słownik Pokoleń — z jakiej epoki to słowo?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lora:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:      #f4ead5;
+    --paper-deep: #ebdfb8;
+    --ink:        #1f1a14;
+    --ink-soft:   #4a3f30;
+    --rule:       #9c8a6a;
+
+    --era-prl:    #8b5e2f;
+    --era-90s:    #e8521c;
+    --era-gg:     #2b86a8;
+    --era-tt:     #d63384;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Lora', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Paper texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.4 0 0 0 0 0.32 0 0 0 0 0.2 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Subtle ruled-paper lines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 31px,
+      rgba(156, 138, 106, 0.13) 31px,
+      rgba(156, 138, 106, 0.13) 32px
+    );
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 2;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 30px 20px 80px;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    margin-bottom: 26px;
+    border-bottom: 3px double var(--ink);
+    padding-bottom: 18px;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(2.6rem, 8vw, 4.2rem);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  h1 small {
+    display: block;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 0.32em;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .subtitle {
+    font-style: italic;
+    font-size: 1.02rem;
+    color: var(--ink-soft);
+    max-width: 480px;
+    margin: 14px auto 0;
+    line-height: 1.45;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 0 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .progress-count {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 5px 10px;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 10px;
+    background: var(--paper-deep);
+    border: 2px solid var(--ink);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--ink);
+    width: 0%;
+    transition: width 0.45s ease;
+  }
+
+  /* CARD - dictionary entry */
+  .card {
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    padding: 30px 26px 24px;
+    position: relative;
+    box-shadow:
+      6px 6px 0 var(--paper-deep),
+      6px 6px 0 2.5px var(--ink);
+  }
+
+  .entry-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .q-prompt {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  /* The word being asked, like a big dictionary headword */
+  .q-word {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(2.4rem, 8vw, 3.8rem);
+    line-height: 1;
+    color: var(--ink);
+    margin: 10px 0 6px;
+    word-wrap: break-word;
+  }
+
+  .q-pronounce {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 22px;
+    letter-spacing: 0.02em;
+  }
+
+  /* OPTIONS - 4 generations always */
+  .options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .opt {
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    padding: 14px 14px;
+    font-family: 'Lora', serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    position: relative;
+  }
+
+  .opt-marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--ink);
+    flex-shrink: 0;
+    opacity: 0.3;
+  }
+
+  .opt[data-era="prl"] .opt-marker { background: var(--era-prl); opacity: 1; }
+  .opt[data-era="90s"] .opt-marker { background: var(--era-90s); opacity: 1; }
+  .opt[data-era="gg"]  .opt-marker { background: var(--era-gg);  opacity: 1; }
+  .opt[data-era="tt"]  .opt-marker { background: var(--era-tt);  opacity: 1; }
+
+  .opt-label {
+    flex: 1;
+    line-height: 1.2;
+  }
+
+  .opt-label small {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+
+  .opt:not(:disabled):hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--ink);
+    background: var(--paper-deep);
+  }
+
+  .opt:not(:disabled):active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  .opt:disabled { cursor: default; }
+
+  .opt.correct {
+    border-color: var(--ink);
+    animation: pop 0.4s ease;
+  }
+  .opt.correct[data-era="prl"] { background: var(--era-prl); color: #fff; }
+  .opt.correct[data-era="90s"] { background: var(--era-90s); color: #fff; }
+  .opt.correct[data-era="gg"]  { background: var(--era-gg);  color: #fff; }
+  .opt.correct[data-era="tt"]  { background: var(--era-tt);  color: #fff; }
+
+  .opt.correct .opt-label small { color: rgba(255,255,255,0.75); }
+  .opt.correct .opt-marker { background: #fff; opacity: 1; }
+
+  .opt.wrong {
+    background: var(--ink);
+    color: var(--paper);
+    animation: shake 0.4s ease;
+  }
+  .opt.wrong .opt-marker { background: var(--paper); opacity: 1; }
+  .opt.wrong .opt-label small { color: rgba(244,234,213,0.7); }
+
+  .opt.dim { opacity: 0.35; }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* FEEDBACK */
+  .feedback {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: var(--paper-deep);
+    border-left: 5px solid var(--ink);
+    display: none;
+  }
+  .feedback.show { display: block; animation: fadeUp 0.3s ease; }
+  .feedback[data-era="prl"] { border-left-color: var(--era-prl); }
+  .feedback[data-era="90s"] { border-left-color: var(--era-90s); }
+  .feedback[data-era="gg"]  { border-left-color: var(--era-gg); }
+  .feedback[data-era="tt"]  { border-left-color: var(--era-tt); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .feedback .verdict {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  .feedback .meaning {
+    font-family: 'Lora', serif;
+    font-size: 0.97rem;
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  .feedback .meaning strong {
+    font-weight: 700;
+  }
+
+  /* NEXT BUTTON */
+  .next-btn {
+    margin-top: 18px;
+    width: 100%;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2.5px solid var(--ink);
+    padding: 15px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: none;
+  }
+  .next-btn.show { display: block; }
+
+  .next-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--era-tt);
+    background: var(--ink-soft);
+  }
+
+  .next-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--era-tt);
+  }
+
+  /* SCORE TRACKER */
+  .score-track {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .score-track strong { color: var(--ink); font-size: 13px; }
+
+  /* RESULTS */
+  .results {
+    text-align: center;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    padding: 44px 24px;
+    box-shadow:
+      8px 8px 0 var(--paper-deep),
+      8px 8px 0 2.5px var(--ink);
+  }
+
+  .result-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .result-score {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(5rem, 20vw, 8rem);
+    line-height: 1;
+    color: var(--ink);
+    margin: 4px 0;
+  }
+
+  .result-score small {
+    font-size: 0.32em;
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(1.6rem, 5vw, 2.3rem);
+    margin: 12px 0 10px;
+    line-height: 1.1;
+  }
+
+  .result-msg {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+    max-width: 480px;
+    margin-inline: auto;
+    line-height: 1.5;
+  }
+
+  .restart-btn {
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    color: var(--ink);
+    padding: 14px 30px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+  .restart-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--era-tt);
+  }
+
+  /* START SCREEN */
+  .start-screen { text-align: center; padding-top: 8px; }
+
+  .start-btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: 3px solid var(--ink);
+    padding: 18px 38px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    box-shadow: 6px 6px 0 var(--era-tt);
+  }
+  .start-btn:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--era-90s);
+  }
+  .start-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--era-tt);
+  }
+
+  /* GENERATIONS LEGEND */
+  .legend {
+    margin-top: 36px;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    padding: 24px 22px 20px;
+    max-width: 500px;
+    margin-inline: auto;
+    text-align: left;
+    box-shadow: 5px 5px 0 var(--paper-deep), 5px 5px 0 2.5px var(--ink);
+  }
+
+  .legend h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+
+  .legend p {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px dashed var(--rule);
+    font-family: 'Lora', serif;
+    font-size: 0.92rem;
+  }
+
+  .legend-item:first-of-type { border-top: none; padding-top: 4px; }
+
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .legend-dot.prl { background: var(--era-prl); }
+  .legend-dot.s90 { background: var(--era-90s); }
+  .legend-dot.gg  { background: var(--era-gg); }
+  .legend-dot.tt  { background: var(--era-tt); }
+
+  .legend-item strong {
+    display: block;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .legend-item span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  .legend-item em {
+    display: block;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    margin-top: 2px;
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    text-align: center;
+    margin-top: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header id="mainHeader">
+    <p class="eyebrow">— Tom I, Wydanie Pierwsze —</p>
+    <h1>Słownik<br>Pokoleń<small>Polski Slang 1960—2026</small></h1>
+    <p class="subtitle">50 słów, które zdradzają, do którego pokolenia należysz. Od „wapna na druty" po „szponcić".</p>
+  </header>
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="start-screen">
+    <button class="start-btn" id="startBtn">Otwórz Słownik ✎</button>
+
+    <div class="legend">
+      <h3>Cztery pokolenia, cztery kolory</h3>
+      <p>Zgadnij, z której epoki pochodzi każde słowo:</p>
+
+      <div class="legend-item">
+        <div class="legend-dot prl"></div>
+        <div>
+          <strong>PRL <span>· lata 60.–80.</span></strong>
+          <em>dziadkowie i starsi rodzice</em>
+        </div>
+      </div>
+
+      <div class="legend-item">
+        <div class="legend-dot s90"></div>
+        <div>
+          <strong>Transformacja <span>· lata 90.</span></strong>
+          <em>pierwsze MTV, polski hip-hop, „wolna Polska"</em>
+        </div>
+      </div>
+
+      <div class="legend-item">
+        <div class="legend-dot gg"></div>
+        <div>
+          <strong>Era GG i Facebooka <span>· lata 2000.–2010.</span></strong>
+          <em>komunikatory, dial-up, pierwsze portale</em>
+        </div>
+      </div>
+
+      <div class="legend-item">
+        <div class="legend-dot tt"></div>
+        <div>
+          <strong>Era TikToka <span>· od ok. 2020</span></strong>
+          <em>Gen Z, Alpha, „skibidi"</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quizScreen" class="hidden">
+    <div class="progress-wrap">
+      <span class="progress-count" id="counter">1 / 50</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="card" id="questionCard">
+      <p class="entry-num" id="entryNum">HASŁO 001</p>
+      <p class="q-prompt">Z jakiej epoki pochodzi to słowo?</p>
+      <h2 class="q-word" id="qWord">—</h2>
+      <p class="q-pronounce" id="qPronounce">/ — /</p>
+
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="nextBtn">Dalej →</button>
+    </div>
+
+    <div class="score-track">
+      <span>✓ Trafione: <strong id="correctCount">0</strong></span>
+      <span>✗ Pudła: <strong id="wrongCount">0</strong></span>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="resultsScreen" class="hidden">
+    <div class="results">
+      <p class="result-eyebrow">— Koniec lektury —</p>
+      <div class="result-score"><span id="finalScore">0</span><small>/50</small></div>
+      <h2 class="result-title" id="resultTitle">—</h2>
+      <p class="result-msg" id="resultMsg">—</p>
+      <button class="restart-btn" id="restartBtn">Otwórz słownik raz jeszcze</button>
+    </div>
+  </div>
+
+  <footer>★ słownik pokoleń · 1960—2026 ★</footer>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ERA keys: prl | 90s | gg | tt
+  // Each entry: { word, era, meaning, hint }
+  var ENTRIES = [
+    // ====== PRL (lata 60.–80.) ======
+    { word: 'wapno na druty', era: 'prl',
+      meaning: 'Sygnał ostrzegawczy — uwaga, nauczyciel/dorosły idzie!',
+      hint: 'Komunikat rzucany na korytarzu w PRL-u, gdy nauczyciel zbliżał się do klasy, w której działo się coś zakazanego.' },
+    { word: 'wapniak', era: 'prl',
+      meaning: 'Rodzic lub starsza osoba.',
+      hint: 'Termin nawiązuje do zwapnienia żył (sklerozy) — używany przez młodzież lat 60.-70. wobec rodziców czy nauczycieli.' },
+    { word: 'jareccy', era: 'prl',
+      meaning: 'Rodzice.',
+      hint: 'Synonim „starych", „starszych" w gwarze młodzieżowej PRL.' },
+    { word: 'buda', era: 'prl',
+      meaning: 'Szkoła.',
+      hint: 'Klasyczne określenie szkoły w gwarze uczniowskiej PRL — synonimy: nora, syf, więzienie. Słowo przetrwało, ale szczyt popularności miał w PRL-u.' },
+    { word: 'piła', era: 'prl',
+      meaning: 'Surowa, wymagająca nauczycielka.',
+      hint: '„Z historyczki to straszna piła" — klasyk gwary szkolnej PRL.' },
+    { word: 'jabol', era: 'prl',
+      meaning: 'Tanie wino owocowe.',
+      hint: 'Od „jabłka". Synonimy: sikacz, siarkofrut, jabcok. Symbol nastoletnich popijaw lat 70.-80.' },
+    { word: 'wolna chata', era: 'prl',
+      meaning: 'Mieszkanie, w którym nie ma rodziców — można urządzić prywatkę.',
+      hint: 'Najczęściej w piątek wieczorem, gdy jareccy wyjeżdżali na działkę.' },
+    { word: 'wciskać kit', era: 'prl',
+      meaning: 'Kłamać, opowiadać niestworzone rzeczy.',
+      hint: 'Klasyk PRL — używany do dziś, ale szczyt popularności miał w gwarze młodzieżowej lat 70.' },
+    { word: 'piącha', era: 'prl',
+      meaning: 'Pięść.',
+      hint: 'Przywalić komuś z piąchy. Słownictwo szkolnych korytarzy lat 70.' },
+    { word: 'pestka', era: 'prl',
+      meaning: 'Łatwizna, łatwe zadanie.',
+      hint: 'Zadanie z matmy? Pestka. Synonim: pikuś.' },
+    { word: 'pikuś', era: 'prl',
+      meaning: 'Drobiazg, łatwa sprawa.',
+      hint: '„To zadanie to pikuś". Bliski kuzyn pestki, prosto z PRL-owskiej szkoły.' },
+    { word: 'picować', era: 'prl',
+      meaning: 'Przesadnie się chwalić, koloryzować, kłamać.',
+      hint: '„Pic na wodę" to znaczy bzdura, ściema. Picować = opowiadać takie bzdury.' },
+    { word: 'piona', era: 'prl',
+      meaning: 'Piątka — ocena celująca albo przybicie piątki.',
+      hint: '„Przybij pionę!" — także w późniejszych dekadach, ale słownictwo PRL-owskiej szkoły.' },
+
+    // ====== LATA 90. (transformacja) ======
+    { word: 'spoko', era: '90s',
+      meaning: 'Luz, w porządku, OK.',
+      hint: 'Skrót od „spokojnie". Pierwsza dekada wolnej Polski i hit gwary nastolatków lat 90. — używany do dziś.' },
+    { word: 'git', era: '90s',
+      meaning: 'Dobrze, OK, fajnie.',
+      hint: 'Z angielskiego „good". Wariant: „gites", „gitara". Słownictwo polskiej młodzieży lat 90.' },
+    { word: 'w pytę', era: '90s',
+      meaning: 'Super, świetnie (wulgarne).',
+      hint: 'Pochodzenie wulgarne, ale w slangu lat 90. używane jak „super". Klasyk podwórkowo-szkolny.' },
+    { word: 'fajowo', era: '90s',
+      meaning: 'Super, fajnie.',
+      hint: 'Wariant: „fajowsko". Lata 80.–90. — zanim spoko zajęło tron, fajowo było wszędzie.' },
+    { word: 'ziom', era: '90s',
+      meaning: 'Kumpel, kolega.',
+      hint: 'Polski hip-hop końca lat 90. wprowadził „ziomka" do mainstreamu — pochodzi od „ziom" jako mieszkaniec tej samej dzielnicy.' },
+    { word: 'elo', era: '90s',
+      meaning: 'Cześć, hejka.',
+      hint: 'Powitanie z hip-hopowego slangu lat 90. — używane do dziś, ale wybuchło razem z polskim rapem.' },
+    { word: 'siema', era: '90s',
+      meaning: 'Cześć (od „jak się masz").',
+      hint: 'Skrót z lat 90., dziś już bardziej uniwersalny, ale narodził się jako młodzieżowe powitanie tej epoki.' },
+    { word: 'mordo', era: '90s',
+      meaning: 'Kumpel, ziom (zwrot do kogoś).',
+      hint: 'Z polskiego hip-hopu lat 90. „Hej mordo, co tam?". Lekko ironiczne, lekko czułe.' },
+    { word: 'czaić', era: '90s',
+      meaning: 'Rozumieć, kapować.',
+      hint: '„Czaisz, o co chodzi?" Klasyk młodzieżowej rozmówki z lat 90.' },
+    { word: 'impra', era: '90s',
+      meaning: 'Impreza.',
+      hint: 'Synonim „biby". Lata 90. to złoty wiek imprez w piwnicach, garażach i klubokawiarniach.' },
+    { word: 'zarąbisty', era: '90s',
+      meaning: 'Świetny, ekstra, super.',
+      hint: 'Lekko wulgarne — typowy slang nastolatków lat 90. Z czasem złagodzony do „zajebisty" i pochodnych.' },
+    { word: 'jarać się', era: '90s',
+      meaning: 'Cieszyć się, ekscytować czymś.',
+      hint: '„Strasznie się jaram tym koncertem!" Słownictwo lat 90.–2000., dziś rzadziej używane.' },
+
+    // ====== ERA GG / FACEBOOKA (2000.–2010.) ======
+    { word: 'nara', era: 'gg',
+      meaning: '„Na razie", pa.',
+      hint: 'Skrót używany na Gadu-Gadu i potem na fejsie. Era szybkich pożegnań na komunikatorach.' },
+    { word: 'lol', era: 'gg',
+      meaning: 'Z angielskiego „laughing out loud" — śmiech.',
+      hint: 'Złoty wiek lol-a to era Gadu-Gadu i wczesnego fejsa. Dziś częściej zastępowany emoji lub „xd".' },
+    { word: 'rotfl', era: 'gg',
+      meaning: '„Rolling on the floor laughing" — pęknięcie ze śmiechu.',
+      hint: 'Mocniejsza wersja „lol" z czasów IRC, GG i pierwszych for. Dziś już archeologia internetu.' },
+    { word: 'zw', era: 'gg',
+      meaning: '„Zaraz wracam" — status na Gadu-Gadu.',
+      hint: 'Klasyczny status nieobecności na GG, gdy szło się zrobić sobie kanapkę.' },
+    { word: 'omg', era: 'gg',
+      meaning: '„Oh my god".',
+      hint: 'Z angielskiego internetu, w polskich rozmówkach popularne w czasach GG, fejsa i pierwszych smartfonów.' },
+    { word: 'gg', era: 'gg',
+      meaning: 'Gadu-Gadu — komunikator.',
+      hint: 'Polski komunikator stworzony w 2000 r. przez Łukasza Foltyna. W szczycie 15 mln kont i 300 mln wiadomości dziennie.' },
+    { word: 'masakra', era: 'gg',
+      meaning: 'Wyraz silnej dezaprobaty lub… zachwytu.',
+      hint: '„No masakra, ale to dobre!" — albo „masakra, że ci się to przytrafiło". Klasyk lat 2000. i 2010.' },
+    { word: 'beka', era: 'gg',
+      meaning: 'Śmieszność, ubaw, dobra zabawa.',
+      hint: '„Niezła beka z tego była!" Słowo przebiło się w drugiej dekadzie XXI w. — w 2016 r. zajęło 3. miejsce w plebiscycie PWN.' },
+    { word: 'ogarniać', era: 'gg',
+      meaning: 'Radzić sobie z czymś, panować nad sytuacją.',
+      hint: '„Ogarnij się!" W 2016 r. zajęło 2. miejsce w plebiscycie na Młodzieżowe Słowo Roku — bezpośredni rywal „sztosa".' },
+    { word: 'dzban', era: 'gg',
+      meaning: 'Osoba mało inteligentna, niezbyt rozgarnięta.',
+      hint: 'Młodzieżowe Słowo Roku 2018 PWN. Wybór bezapelacyjny — 30% głosów. Spopularyzowane przez youtubera Klocucha.' },
+    { word: 'xD', era: 'gg',
+      meaning: 'Emotka śmiechu z zamkniętymi oczami i otwartymi ustami.',
+      hint: 'Młodzieżowe Słowo Roku 2017 PWN. Ikona Gadu-Gadu, którą Eric Cartman ze South Park zinterpretował idealnie.' },
+    { word: 'sztos', era: 'gg',
+      meaning: 'Coś świetnego, niesamowitego, fantastycznego.',
+      hint: 'Młodzieżowe Słowo Roku 2016 PWN — pierwsza edycja. Pochodzi z niemieckiego „Stoss" (pchnięcie); pojawiało się już w latach 90.' },
+    { word: 'yolo', era: 'gg',
+      meaning: '„You only live once" — żyje się raz.',
+      hint: 'Spopularyzowane przez Drake\'a (2011). W Polsce hit ery fejsa — usprawiedliwienie dla każdej głupoty.' },
+    { word: 'swag', era: 'gg',
+      meaning: 'Styl, lans, „spoko gość".',
+      hint: 'Z amerykańskiego hip-hopu (Soulja Boy, 2008). W Polsce na topie ok. 2012–2014.' },
+
+    // ====== ERA TIKTOKA (od ok. 2020) ======
+    { word: 'śpiulkolot', era: 'tt',
+      meaning: 'Miejsce do spania / udanie się na spoczynek.',
+      hint: 'Młodzieżowe Słowo Roku 2021 PWN. Pochodzi z mema — „śpiulkać" = spać. „Boardingowanie do śpiulkolotu" = idę spać.' },
+    { word: 'essa', era: 'tt',
+      meaning: 'Luz, ekspresja pozytywnych emocji.',
+      hint: 'Młodzieżowe Słowo Roku 2022 PWN. Okrzyk radości, podobny do „yes!" — wybuchło wraz z TikTokiem.' },
+    { word: 'rel', era: 'tt',
+      meaning: 'Z ang. „relate" — zgadzam się, też tak mam.',
+      hint: 'Młodzieżowe Słowo Roku 2023 PWN. Skrót zapożyczony z angielskich komentarzy TikToka.' },
+    { word: 'sigma', era: 'tt',
+      meaning: 'Mężczyzna silny, niezależny, pewny siebie.',
+      hint: 'Młodzieżowe Słowo Roku 2024 PWN. Z teorii hierarchii samców (alfa, beta, sigma) — sigma to lone wolf, popularne na TikToku.' },
+    { word: 'szponcić', era: 'tt',
+      meaning: 'Wygłupiać się, cwaniaczyć, robić coś ryzykownego (też: pozytywnie — flirtować, kombinować).',
+      hint: 'Młodzieżowe Słowo Roku 2025 PWN. Dawniej w gwarach miejskich oznaczało „kombinować, intrygować".' },
+    { word: 'cringe', era: 'tt',
+      meaning: 'Żenada, niezręczność.',
+      hint: 'Z angielskiego „cringe" — wzdrygać się. Polski wariant: „krindż". Hit gen Z, dziś już niemal nie do uniknięcia.' },
+    { word: 'baza', era: 'tt',
+      meaning: 'Wyraz aprobaty, „mocne, zgadzam się".',
+      hint: 'Z ang. „based" (bycie sobą, bez lęku). Spopularyzowane przez rapera Lil B w 2010, w Polsce hit ok. 2022.' },
+    { word: 'slay', era: 'tt',
+      meaning: 'Super, robi wrażenie, „pozamiatać".',
+      hint: 'Z ang. „slay" — niszczyć, gromić. W Polsce hit TikToka od ok. 2022; szczególnie używane wobec mody i stylu.' },
+    { word: 'skibidi', era: 'tt',
+      meaning: 'Słowo-okrzyk bez konkretnego znaczenia — vibe.',
+      hint: 'Od „Skibidi Toilet" — wiralu z YouTuba (2023). Może oznaczać wszystko: super, dziwne, śmieszne. Symbol „brainrot".' },
+    { word: 'rizz', era: 'tt',
+      meaning: 'Charyzma, umiejętność flirtowania.',
+      hint: 'Skrót od „charisma". Spopularyzowane przez streamera Kai Cenata (2022). „Masz rizz" = potrafisz poderwać.' },
+    { word: 'bambik', era: 'tt',
+      meaning: 'Początkujący, n00b, ktoś słaby w grze.',
+      hint: 'Z gier online — szczególnie Fortnite. Powstało jako pieszczotliwe określenie dziecka, dziś = ktoś, kto nie ogarnia.' },
+    { word: 'brainrot', era: 'tt',
+      meaning: '„Gnicie mózgu" od przesytu treściami internetowymi.',
+      hint: '„Brain rot" = mózg rozkłada się od ciągłego oglądania memów, krótkich filmików, TikToka. W finałowej 15. Słowa Roku 2025.' }
+  ];
+
+  var ERAS = [
+    { key: 'prl', label: 'PRL',                  range: 'lata 60.–80.',     emoji: '·' },
+    { key: '90s', label: 'Lata 90.',             range: 'transformacja',    emoji: '·' },
+    { key: 'gg',  label: 'Era GG i Facebooka',   range: 'lata 2000.–2010.', emoji: '·' },
+    { key: 'tt',  label: 'Era TikToka',          range: 'od ok. 2020',      emoji: '·' }
+  ];
+
+  // ===== STATE =====
+  var order = [];
+  var idx = 0;
+  var correct = 0;
+  var wrong = 0;
+  var answered = false;
+  var TOTAL = 50;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function startQuiz() {
+    var ix = [];
+    for (var i = 0; i < ENTRIES.length; i++) ix.push(i);
+    order = shuffle(ix).slice(0, TOTAL);
+    idx = 0;
+    correct = 0;
+    wrong = 0;
+    document.getElementById('mainHeader').classList.add('hidden');
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('resultsScreen').classList.add('hidden');
+    document.getElementById('quizScreen').classList.remove('hidden');
+    renderQuestion();
+  }
+
+  function eraLabel(key) {
+    for (var i = 0; i < ERAS.length; i++) if (ERAS[i].key === key) return ERAS[i].label;
+    return key;
+  }
+
+  function eraRange(key) {
+    for (var i = 0; i < ERAS.length; i++) if (ERAS[i].key === key) return ERAS[i].range;
+    return '';
+  }
+
+  function renderQuestion() {
+    answered = false;
+    var q = ENTRIES[order[idx]];
+
+    document.getElementById('counter').textContent = (idx + 1) + ' / ' + TOTAL;
+    document.getElementById('progressFill').style.width = ((idx / TOTAL) * 100) + '%';
+    document.getElementById('entryNum').textContent = 'HASŁO ' + String(idx + 1).padStart(3, '0');
+    document.getElementById('correctCount').textContent = correct;
+    document.getElementById('wrongCount').textContent = wrong;
+
+    document.getElementById('qWord').textContent = q.word;
+    // pseudo-pronunciation
+    var pron = q.word.toLowerCase();
+    document.getElementById('qPronounce').textContent = '/ ' + pron + ' /';
+
+    // Build options - always all 4 eras, shuffled
+    var shuffled = shuffle(ERAS);
+    var optsEl = document.getElementById('options');
+    optsEl.innerHTML = '';
+    for (var k = 0; k < shuffled.length; k++) {
+      (function(eraObj) {
+        var btn = document.createElement('button');
+        btn.className = 'opt';
+        btn.type = 'button';
+        btn.setAttribute('data-era', eraObj.key);
+
+        var marker = document.createElement('span');
+        marker.className = 'opt-marker';
+
+        var label = document.createElement('span');
+        label.className = 'opt-label';
+        label.innerHTML = eraObj.label + '<small>' + eraObj.range + '</small>';
+
+        btn.appendChild(marker);
+        btn.appendChild(label);
+        btn.addEventListener('click', function() {
+          selectAnswer(btn, eraObj.key, q);
+        });
+        optsEl.appendChild(btn);
+      })(shuffled[k]);
+    }
+
+    var fb = document.getElementById('feedback');
+    fb.classList.remove('show');
+    fb.removeAttribute('data-era');
+    fb.innerHTML = '';
+    document.getElementById('nextBtn').classList.remove('show');
+  }
+
+  function selectAnswer(btn, eraKey, q) {
+    if (answered) return;
+    answered = true;
+
+    var allBtns = document.querySelectorAll('.opt');
+    var isCorrect = eraKey === q.era;
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      correct++;
+    } else {
+      btn.classList.add('wrong');
+      wrong++;
+      for (var i = 0; i < allBtns.length; i++) {
+        if (allBtns[i].getAttribute('data-era') === q.era) {
+          allBtns[i].classList.add('correct');
+        }
+      }
+    }
+
+    for (var j = 0; j < allBtns.length; j++) {
+      allBtns[j].disabled = true;
+      if (!allBtns[j].classList.contains('correct') && !allBtns[j].classList.contains('wrong')) {
+        allBtns[j].classList.add('dim');
+      }
+    }
+
+    document.getElementById('correctCount').textContent = correct;
+    document.getElementById('wrongCount').textContent = wrong;
+
+    var fb = document.getElementById('feedback');
+    fb.setAttribute('data-era', q.era);
+    var verdictText = isCorrect ? 'Trafione.' : 'Pudło — ' + eraLabel(q.era) + '.';
+    fb.innerHTML =
+      '<div class="verdict">' + verdictText + '</div>' +
+      '<div class="meaning"><strong>' + q.word + '</strong> — ' + q.meaning + ' ' + q.hint + '</div>';
+    fb.classList.add('show');
+
+    var next = document.getElementById('nextBtn');
+    next.textContent = (idx + 1 >= TOTAL) ? 'Zobacz wynik →' : 'Dalej →';
+    next.classList.add('show');
+
+    setTimeout(function() {
+      next.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 80);
+  }
+
+  function nextQuestion() {
+    idx++;
+    if (idx >= TOTAL) {
+      showResults();
+    } else {
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function showResults() {
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('quizScreen').classList.add('hidden');
+    document.getElementById('resultsScreen').classList.remove('hidden');
+
+    document.getElementById('finalScore').textContent = correct;
+
+    var title, msg;
+    var pct = (correct / TOTAL) * 100;
+    if (pct >= 90) {
+      title = 'Językowy Wieszcz Pokoleń';
+      msg = 'Ogarniasz wszystko — od „wapna na druty" po „szponcić". Pewnie wychowywałeś się na trzech generacjach memów, czytasz forum dziadka i TikToka wnuczki.';
+    } else if (pct >= 75) {
+      title = 'Wytrawny Słownikarz';
+      msg = 'Solidna znajomość historii polskiej młodomowy. Pomylił Ci się może jeden „rotfl" z „rel" — ale to drobiazg.';
+    } else if (pct >= 60) {
+      title = 'Międzypokoleniowy Tłumacz';
+      msg = 'Klasyki masz w jednym palcu, ale skrajne pokolenia (PRL i TikTok) zaczynają się rozmywać. Czas na rozmowę z babcią i siostrzeńcem.';
+    } else if (pct >= 40) {
+      title = 'Mieszkaniec Jednej Dekady';
+      msg = 'Twoja epoka — bezpiecznie. Pozostałe — mgła. Spoko, masakra, sztos i essa to różne planety.';
+    } else if (pct >= 20) {
+      title = 'Strefa Językowego Cienia';
+      msg = 'Nie znasz ani jabola, ani sigmy. Może żyjesz poza Polską, może wciąż używasz „xD". Tak czy siak — czas na lekcję.';
+    } else {
+      title = 'Cringe Total';
+      msg = 'No to skibidi. Możliwe że jesteś botem, możliwe że dopiero uczysz się polskiego — w obu przypadkach: szacun, że dotrwałeś.';
+    }
+
+    document.getElementById('resultTitle').textContent = title;
+    document.getElementById('resultMsg').textContent = msg;
+  }
+
+  function restartQuiz() {
+    startQuiz();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function init() {
+    document.getElementById('startBtn').addEventListener('click', startQuiz);
+    document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+    document.getElementById('restartBtn').addEventListener('click', restartQuiz);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>
